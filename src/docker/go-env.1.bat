@@ -1,0 +1,1 @@
+start powershell -NoExit -Command "$InformationPreference='Continue'; & .\launch-web.ps1 'nerd1'"

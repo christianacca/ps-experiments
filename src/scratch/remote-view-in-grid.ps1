@@ -15,6 +15,6 @@ cd C:\Docker\w16-dk01
 $cmd = {
     Get-Process | select ProcessName, CPU, WorkingSet -First 10 | ConvertTo-Json    
 }
-Invoke-Command { docker exec hc powershell "$cmd" } |
+docker exec hc powershell "$cmd" |
 ConvertFrom-Json | foreach { [PSCustomObject]$_} | Out-GridView
 #clip; start http://jsonviewer.stack.hu/

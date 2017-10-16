@@ -1,0 +1,30 @@
+version: '3.3'
+
+services:
+
+  nerd-dinner-db:
+    image: dockeronwindows/ch06-nerd-dinner-db
+    volumes:
+      - db-data:C:\data
+    networks:
+      - nd-net
+  
+  nerd-dinner-homepage:
+    image: dockeronwindows/ch03-nerd-dinner-homepage
+    networks:
+      - nd-net
+
+  nerd-dinner-web:
+    image: dockeronwindows/ch03-nerd-dinner-web
+    depends_on:
+      - nerd-dinner-db
+      - nerd-dinner-homepage
+    networks:
+      - nd-net
+
+volumes:
+  db-data:
+
+networks:
+  nd-net:
+    driver: nat
