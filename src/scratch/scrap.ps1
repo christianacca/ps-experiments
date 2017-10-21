@@ -1,0 +1,1 @@
+.\src\scratch\add-docker-website.ps1 C:\Scrap\iis-site -SiteName MySite2 -AppName MyApp

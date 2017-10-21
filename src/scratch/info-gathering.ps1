@@ -1,5 +1,16 @@
 # Begin: Alternative ways of performing a `Select`(aka `map`)
 
+Get-IISSite -pv site |
+    select -Exp Applications -pv app |
+    Get-IISAppPool -Name {$_.ApplicationPoolName} -pv pool |
+    select  `
+@{n = 'Site_Name'; e = {$site.Name}},
+@{n = 'App_Name'; e = {$app.Path}}, 
+@{n = 'AppPool_Name'; e = {$app.ApplicationPoolName}},
+@{n = 'AppPool_IdentityType'; e = {$pool.ProcessModel.IdentityType}},
+@{n = 'AppPool_User_Name'; e = {$pool.ProcessModel.UserName}} |
+    ft * -AutoSize
+
 dir -Recurse -Directory |
     foreach -Begin { 
     $h = @{}; $result = @();
@@ -21,10 +32,10 @@ $cmd = {
 
 $cmd2 = {
     dir -Recurse -Directory |
-        select FullName, @{Name = 'Stats'; Expression = { dir $_.FullName -Recurse -File| measure Length -Sum }} |
+        select FullName, @{n = 'Stats'; e = { dir $_.FullName -Recurse -File| measure Length -Sum }} |
         select FullName,
-    @{Name = 'Files'; Expression = {$_.Stats.Count}},
-    @{Name = 'TotalSize'; Expression = {$_.Stats.Sum}}
+    @{n = 'Files'; e = {$_.Stats.Count}},
+    @{n = 'TotalSize'; e = {$_.Stats.Sum}}
 }
 
 $select = {
@@ -32,12 +43,12 @@ $select = {
         group Source |
         select Name,
     @{
-        Name       = 'Header'; 
-        Expression = { "$($_.count) entries" }
+        n = 'Header'; 
+        e = { "$($_.count) entries" }
     },
     @{
-        Name       = 'Lines'; 
-        Expression = { $_.group | foreach {
+        n = 'Lines'; 
+        e = { $_.group | foreach {
                 $_ | select TimeGenerated | Out-String;
                 $_ | select -ExpandProperty Message | Out-String;
             } }
