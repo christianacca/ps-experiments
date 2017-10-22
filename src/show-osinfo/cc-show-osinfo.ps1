@@ -10,11 +10,11 @@ function Show-OSInfo {
     )
     begin {
         $callerEA = $ErrorActionPreference
-        
+
         . .\src\show-osinfo\cc-new-cimsession.ps1
         . .\src\show-osinfo\cc-get-osinfo.ps1
 
-        if ($PSBoundParameters.ContainsKey('File')) { 
+        if ($PSCmdlet.ParameterSetName -eq 'File') { 
             $ComputerName = Get-Content -Path $FileName -EA Stop
         }
     }
