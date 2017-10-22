@@ -1,4 +1,4 @@
-function cGet-OSInfo {
+function Get-OsInfoHelper {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline)]

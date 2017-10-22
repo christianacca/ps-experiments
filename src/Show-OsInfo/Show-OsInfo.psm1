@@ -11,8 +11,8 @@ function Show-OSInfo {
     begin {
         $callerEA = $ErrorActionPreference
 
-        . .\src\show-osinfo\cc-new-cimsession.ps1
-        . .\src\show-osinfo\cc-get-osinfo.ps1
+        . "$PSScriptRoot\New-CimSessionHelper.ps1"
+        . "$PSScriptRoot\Get-OsInfoHelper.ps1"
 
         if ($PSCmdlet.ParameterSetName -eq 'File') { 
             $ComputerName = Get-Content -Path $FileName -EA Stop
@@ -22,8 +22,8 @@ function Show-OSInfo {
         try {
 
             $ComputerName | 
-                cNew-CimSession | 
-                cGet-OSInfo |
+                New-CimSessionHelper | 
+                Get-OSInfoHelper |
                 Format-Table -AutoSize
             
         }

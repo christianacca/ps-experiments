@@ -1,11 +1,11 @@
-function cNew-CimSession {
+function New-CimSessionHelper {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [string]$ComputerName
     )
     begin {
-        . .\src\exceptions\try-first.ps1
+        . "$PSScriptRoot\Try-FirstHelper.ps1"
         $callerEA = $ErrorActionPreference
     }
     process {
@@ -19,7 +19,7 @@ function cNew-CimSession {
                 Write-Verbose "Attempty DCOM session to $ComputerName"
                 New-CimSession $ComputerName -SessionOption (New-CimSessionOption -Protocol Dcom)
             }
-            $session = Try-First $tryCim, $tryDcom
+            $session = Try-FirstHelper $tryCim, $tryDcom
             if (-not $session) {
                 throw "Failed to connect to $ComputerName"
             }
