@@ -69,3 +69,18 @@ Stop-IISCommitDelay
 Add-Hostnames '127.0.0.1' $spaHostName
 # this is required for windows auth to work when host name "loops back" to the same machine
 Add-BackConnectionHostNames $spaHostName
+
+# Set file access permissions
+
+# Modify permissions on C:\Git\Series5 (dev m/c only)...
+# 1. grant full control to 'Series5000Dev Group'
+# 2. remove inheritance (copy existing permissions)
+# 3. remove all users except 'BUILTIN\Administrators', 'NT AUTHORITY\SYSTEM', 'Series5000Dev Group'
+
+# Modify permissions on $SpaAppPath...
+# 1. remove inheritance (copy existing permissions)
+# 2. remove all users except 'BUILTIN\Administrators', 'NT AUTHORITY\SYSTEM'
+# 3. grant IIS AppPool\$mainAppPoolName permissions:
+# - read access to app files and subfolders
+# - Write access to App_Data, logs, Series5Seed/screens
+# - Read+Execute on bin/PropertyBuilder.exe
