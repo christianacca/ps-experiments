@@ -1,13 +1,14 @@
+#Requires -Version 5.0 -Modules IISAdministration
+
 function Unlock-IISAnonymousAuth {
     [CmdletBinding()]
     param (
-        [string] $Location
+        [string] $Location,
+        [Microsoft.Web.Administration.ServerManager] $ServerManager
     )
     
     begin {
         $callerEA = $ErrorActionPreference
-        . "$PSScriptRoot\Unlock-IISConfigSection.ps1"
-        # . .\src\scratch\Unlock-IISConfigSection.ps1
     }
     
     process {
@@ -16,7 +17,8 @@ function Unlock-IISAnonymousAuth {
 
             Unlock-IISConfigSection `
                 -SectionPath 'system.webServer/security/authentication/anonymousAuthentication' `
-                -Location $Location            
+                -Location $Location `
+                -ServerManager $ServerManager         
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

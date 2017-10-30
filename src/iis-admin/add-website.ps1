@@ -3,7 +3,8 @@
 param(
     [string]$RootPath = 'C:\Scrap\ps-websites',
     [string]$SiteName,
-    [string]$AppName
+    [string]$AppName,
+    [int] $Port = 8080
 )
 
 [Microsoft.Web.Administration.ServerManager]$manager = Get-IISServerManager
@@ -33,7 +34,7 @@ $pool.ProcessModel.UserName = $cred.UserName
 $pool.ProcessModel.Password = $cred.Password
 
 
-$site = $manager.Sites.Add($SiteName, $sitePath, 8080)
+$site = $manager.Sites.Add($SiteName, $sitePath, $Port)
 $app = $site.Applications.Add("/$AppName", $appPath)
 $app.ApplicationPoolName = $AppName
 

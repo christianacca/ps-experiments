@@ -1,8 +1,11 @@
+#Requires -Version 5.0 -Modules IISAdministration
+
 function Unlock-IISWindowsAuth {
     [CmdletBinding()]
     param (
         [string] $Location,
-        [switch] $Minimum
+        [switch] $Minimum,
+        [Microsoft.Web.Administration.ServerManager] $ServerManager
     )
     
     begin {
@@ -13,7 +16,9 @@ function Unlock-IISWindowsAuth {
         try {
             $ErrorActionPreference = 'Stop'
 
-            [Microsoft.Web.Administration.ServerManager]$mngr = Get-IISServerManager
+            if (-not $ServerManager) {
+                $ServerManager = Get-IISServerManager
+            }
 
             $winAuthConfig = Get-IISConfigSection `
                 'system.webServer/security/authentication/windowsAuthentication' `
@@ -25,7 +30,9 @@ function Unlock-IISWindowsAuth {
                 $winAuthConfig.SetMetadata('lockAllElementsExcept', 'extendedProtection')
             }
 
-            $mngr.CommitChanges()
+            if (-not $PSBoundParameters.ContainsKey('ServerManager')) {
+                $ServerManager.CommitChanges()
+            }
             
         }
         catch {

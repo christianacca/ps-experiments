@@ -1,3 +1,5 @@
+#Requires -Version 5.0 -Modules IISAdministration
+
 function Unlock-IISConfigSection {
     [CmdletBinding()]
     param (
@@ -5,7 +7,8 @@ function Unlock-IISConfigSection {
         [string] $SectionPath,
         [Parameter(Mandatory, ParameterSetName='Config')]
         [Microsoft.Web.Administration.Configuration] $Section,
-        [string] $Location
+        [string] $Location,
+        [Microsoft.Web.Administration.ServerManager] $ServerManager
     )
     
     begin {
@@ -16,7 +19,10 @@ function Unlock-IISConfigSection {
         try {
             $ErrorActionPreference = 'Stop'
 
-            [Microsoft.Web.Administration.ServerManager]$mngr = Get-IISServerManager
+            if (-not $ServerManager) {
+                $ServerManager = Get-IISServerManager
+            }
+
             $sectionConfig = if ($Section.IsPresent) { 
                 $Section
             }
@@ -24,7 +30,10 @@ function Unlock-IISConfigSection {
                 Get-IISConfigSection $SectionPath -Location $Location
             }
             $sectionConfig.OverrideMode = 'Allow'
-            $mngr.CommitChanges()
+            
+            if (-not $PSBoundParameters.ContainsKey('ServerManager')) {
+                $ServerManager.CommitChanges()
+            }
             
         }
         catch {
