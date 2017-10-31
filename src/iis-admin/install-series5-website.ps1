@@ -6,9 +6,9 @@ $ErrorActionPreference = 'Stop'
 $RootPath = 'C:\Git\Series5'
 $SiteName = 'Series5'
 $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
-$WinLoginAppPath = 'C:\Git\Series5\src\Ram.Series5.WinLogin'
+$WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $Port = 80
-$SiteRootPath = 'C:\inetpub\wwwroot'
+$SiteRootPath = 'C:\inetpub\sites'
 
 . .\src\IISSecurity\Set-IISAppPoolIdentityAcl.ps1
 Install-CaccaMissingScript Add-Hostnames
@@ -16,6 +16,7 @@ Install-CaccaMissingScript Add-BackConnectionHostNames
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
+$winLoginAppPath = Join-Path $RootPath $WinLoginRelativeAppPath
 $spaAppName = 'Spa'
 $mainAppPoolName = 'Series5-AppPool'
 # IMPORTANT: this must NOT use a . in the host name. Doing so would result in our site being classified into the 'internet'
@@ -56,6 +57,7 @@ $site.Applications["/"].ApplicationPoolName = $mainAppPoolName
 # todo: make WinLogin a peer of Spa app
 Unlock-CaccaIISWindowsAuth -Location "$SiteName/$spaAppName/$winLoginAppName" -Minimum -ServerManager $manager
 Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName/$winLoginAppName" -ServerManager $manager
+Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName" -ServerManager $manager
 Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServerVariables' -Location "$SiteName/$spaAppName" -ServerManager $manager
 
 # Create SPA child application
@@ -63,7 +65,7 @@ $spaApp = $site.Applications.Add("/$spaAppName", $spaAppPath)
 $spaApp.ApplicationPoolName = $mainAppPoolName
 
 # Create WinLogin child app
-$winLoginApp = $site.Applications.Add("/$spaAppName/$winLoginAppName", $WinLoginAppPath)
+$winLoginApp = $site.Applications.Add("/$spaAppName/$winLoginAppName", $winLoginAppPath)
 $winLoginApp.ApplicationPoolName = $mainAppPoolName
 
 Stop-IISCommitDelay
@@ -75,12 +77,24 @@ Add-BackConnectionHostNames $spaHostName
 
 # Set file access permissions
 
-$aclParams = @{
+# file permissions:
+# * lockdown $RootPath whilst granting $AppPoolName sufficient permissions to Spa virtual directory
+# * provide full permissions on $RootPath to 'BSW\Series5000Dev Group' (convenient for devs)
+$spaAclParams = @{
     RootPath = $RootPath
     RelativeAppPath = $SpaRelativeAppPath
     AppPoolName = $mainAppPoolName
-    RelativePathsWithModifyPerms = @('logs')
-    RelativePathsWithExecPerms = @('bin\PropertyBuilder.exe')
+    RelativePathsWithModifyPerms = @('logs', 'App_Data', 'Series5Seed\screens')
+    RelativePathsWithExecPerms = @('UDFs\PropertyBuilder.exe')
     SiteAdminsGroup = 'BSW\Series5000Dev Group'
 }
-Set-IISAppPoolIdentityAcl @aclParams -Verbose
+Set-IISAppPoolIdentityAcl @spaAclParams
+
+# file permissions: grant $AppPoolName sufficient to WinLogin virtual directory
+$winLoginAclParams = @{
+    RootPath = $winLoginAppPath
+    RelativeAppPath = '\'
+    AppPoolName = $mainAppPoolName
+    RelativePathsWithModifyPerms = @('logs')
+}
+Set-IISAppPoolIdentityAcl @winLoginAclParams
