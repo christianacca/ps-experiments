@@ -54,9 +54,8 @@ $site = New-IISSite -Name $SiteName -BindingInformation "*:$($Port):$($spaHostNa
 $site.Applications["/"].ApplicationPoolName = $mainAppPoolName
 
 # Unlock sections in applicationHost.config
-# todo: make WinLogin a peer of Spa app
-Unlock-CaccaIISWindowsAuth -Location "$SiteName/$spaAppName/$winLoginAppName" -Minimum -ServerManager $manager
-Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName/$winLoginAppName" -ServerManager $manager
+Unlock-CaccaIISWindowsAuth -Location "$SiteName/$winLoginAppName" -Minimum -ServerManager $manager
+Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$winLoginAppName" -ServerManager $manager
 Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName" -ServerManager $manager
 Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServerVariables' -Location "$SiteName/$spaAppName" -ServerManager $manager
 
@@ -65,7 +64,7 @@ $spaApp = $site.Applications.Add("/$spaAppName", $spaAppPath)
 $spaApp.ApplicationPoolName = $mainAppPoolName
 
 # Create WinLogin child app
-$winLoginApp = $site.Applications.Add("/$spaAppName/$winLoginAppName", $winLoginAppPath)
+$winLoginApp = $site.Applications.Add("/$winLoginAppName", $winLoginAppPath)
 $winLoginApp.ApplicationPoolName = $mainAppPoolName
 
 Stop-IISCommitDelay
