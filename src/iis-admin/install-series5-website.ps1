@@ -3,16 +3,19 @@
 
 $ErrorActionPreference = 'Stop'
 
+$RootPath = 'C:\Git\Series5'
 $SiteName = 'Series5'
-$SpaAppPath = 'C:\Git\Series5\src\Ram.Series5.Spa'
+$SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginAppPath = 'C:\Git\Series5\src\Ram.Series5.WinLogin'
 $Port = 80
 $SiteRootPath = 'C:\inetpub\wwwroot'
 
+. .\src\IISSecurity\Set-IISAppPoolIdentityAcl.ps1
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
 
 # Declare script-wide constants/variables
+$spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
 $spaAppName = 'Spa'
 $mainAppPoolName = 'Series5-AppPool'
 # IMPORTANT: this must NOT use a . in the host name. Doing so would result in our site being classified into the 'internet'
@@ -56,7 +59,7 @@ Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName/$winLoginAppName" 
 Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServerVariables' -Location "$SiteName/$spaAppName" -ServerManager $manager
 
 # Create SPA child application
-$spaApp = $site.Applications.Add("/$spaAppName", $SpaAppPath)
+$spaApp = $site.Applications.Add("/$spaAppName", $spaAppPath)
 $spaApp.ApplicationPoolName = $mainAppPoolName
 
 # Create WinLogin child app
@@ -72,15 +75,12 @@ Add-BackConnectionHostNames $spaHostName
 
 # Set file access permissions
 
-# Modify permissions on C:\Git\Series5 (dev m/c only)...
-# 1. grant full control to 'Series5000Dev Group'
-# 2. remove inheritance (copy existing permissions)
-# 3. remove all users except 'BUILTIN\Administrators', 'NT AUTHORITY\SYSTEM', 'Series5000Dev Group'
-
-# Modify permissions on $SpaAppPath...
-# 1. remove inheritance (copy existing permissions)
-# 2. remove all users except 'BUILTIN\Administrators', 'NT AUTHORITY\SYSTEM'
-# 3. grant IIS AppPool\$mainAppPoolName permissions:
-# - read access to app files and subfolders
-# - Write access to App_Data, logs, Series5Seed/screens
-# - Read+Execute on bin/PropertyBuilder.exe
+$aclParams = @{
+    RootPath = $RootPath
+    RelativeAppPath = $SpaRelativeAppPath
+    AppPoolName = $mainAppPoolName
+    RelativePathsWithModifyPerms = @('logs')
+    RelativePathsWithExecPerms = @('bin\PropertyBuilder.exe')
+    SiteAdminsGroup = 'BSW\Series5000Dev Group'
+}
+Set-IISAppPoolIdentityAcl @aclParams -Verbose
