@@ -3,20 +3,21 @@
 
 $ErrorActionPreference = 'Stop'
 
-$RootPath = 'C:\Git\Series5'
+$RootPath = 'C:\Scrap\Sites'
 $SiteName = 'Series5'
-$SpaRelativeAppPath = 'src\Ram.Series5.Spa'
-$WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
+$SpaRelativeAppPath = 'Spa'
+$WinLoginRelativeAppPath = 'WinLogin'
 $Port = 80
-$SiteRootPath = 'C:\inetpub\sites'
+$SiteRootPath = Join-Path $RootPath $SiteName
 
 . .\src\IISSecurity\Set-IISAppPoolIdentityAcl.ps1
+. .\src\IISSecurity\Set-WebHardenedAcl.ps1
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
 
 # Declare script-wide constants/variables
-$spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
-$winLoginAppPath = Join-Path $RootPath $WinLoginRelativeAppPath
+$spaAppPath = Join-Path $SiteRootPath $SpaRelativeAppPath
+$winLoginAppPath = Join-Path $SiteRootPath $WinLoginRelativeAppPath
 $spaAppName = 'Spa'
 $mainAppPoolName = 'Series5-AppPool'
 # IMPORTANT: this must NOT use a . in the host name. Doing so would result in our site being classified into the 'internet'
@@ -40,9 +41,8 @@ Stop-IISCommitDelay
 
 # Create top level website with apps
 # Reset-IISServerManager -Confirm:$false
-$sitePath = Join-Path $SiteRootPath $SiteName
-if (-not(Test-Path $sitePath)) {
-    New-Item $sitePath -ItemType Directory | Out-Null
+if (-not(Test-Path $SiteRootPath)) {
+    New-Item $SiteRootPath -ItemType Directory | Out-Null
 }
 Start-IISCommitDelay
 $pool = $manager.ApplicationPools.Add($mainAppPoolName)
@@ -50,7 +50,7 @@ $pool.ManagedPipelineMode = "Integrated"
 $pool.ManagedRuntimeVersion = "v4.0"
 $pool.Enable32BitAppOnWin64 = $true
 $pool.AutoStart = $true
-$site = New-IISSite -Name $SiteName -BindingInformation "*:$($Port):$($spaHostName)" -PhysicalPath $sitePath -Passthru
+$site = New-IISSite -Name $SiteName -BindingInformation "*:$($Port):$($spaHostName)" -PhysicalPath $SiteRootPath -Passthru
 $site.Applications["/"].ApplicationPoolName = $mainAppPoolName
 
 # Unlock sections in applicationHost.config
@@ -76,24 +76,22 @@ Add-BackConnectionHostNames $spaHostName
 
 # Set file access permissions
 
-# file permissions:
-# * lockdown $RootPath whilst granting $AppPoolName sufficient permissions to Spa virtual directory
-# * provide full permissions on $RootPath to 'BSW\Series5000Dev Group' (convenient for devs)
+Set-WebHardenedAcl -Path $RootPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
+
+# file permissions: grant $AppPoolName sufficient to Spa virtual directory
 $spaAclParams = @{
-    RootPath = $RootPath
-    RelativeAppPath = $SpaRelativeAppPath
+    SitePath = $SiteRootPath
+    AppPath = $SpaRelativeAppPath
     AppPoolName = $mainAppPoolName
-    RelativePathsWithModifyPerms = @('logs', 'App_Data', 'Series5Seed\screens')
-    RelativePathsWithExecPerms = @('UDFs\PropertyBuilder.exe')
-    SiteAdminsGroup = 'BSW\Series5000Dev Group'
+    AppPathsWithModifyPerms = @('logs', 'App_Data', 'Series5Seed\screens')
+    AppPathsWithExecPerms = @('UDFs\PropertyBuilder.exe')
 }
 Set-IISAppPoolIdentityAcl @spaAclParams
 
 # file permissions: grant $AppPoolName sufficient to WinLogin virtual directory
 $winLoginAclParams = @{
-    RootPath = $winLoginAppPath
-    RelativeAppPath = '\'
+    AppPath = $winLoginAppPath
     AppPoolName = $mainAppPoolName
-    RelativePathsWithModifyPerms = @('logs')
+    AppPathsWithModifyPerms = @('logs')
 }
 Set-IISAppPoolIdentityAcl @winLoginAclParams
