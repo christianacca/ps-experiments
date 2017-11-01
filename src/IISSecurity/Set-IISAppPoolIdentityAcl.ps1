@@ -25,9 +25,9 @@ function Set-IISAppPoolIdentityAcl {
 
     $appPoolIdentityName = "IIS AppPool\$AppPoolName"
 
-    if ([string]::IsNullOrWhiteSpace($SitePath)) {
+    if (![string]::IsNullOrWhiteSpace($SitePath)) {
         if ($PSCmdlet.ShouldProcess($SitePath, "Granting '$appPoolIdentityName' read permission to this folder and files (no inherit)")) {
-            icacls ("$SiteRootPath") /grant:r ("$appPoolIdentityName" + ':(OI)(NP)R') | Out-Null
+            icacls ("$SitePath") /grant:r ("$appPoolIdentityName" + ':(OI)(NP)R') | Out-Null
         }
     }
 
