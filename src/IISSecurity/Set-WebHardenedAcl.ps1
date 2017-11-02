@@ -21,7 +21,7 @@ function Set-WebHardenedAcl {
 
     # remove from file system the default groups that windows assigns to AppPool Identity and shared service accoumts
 
-    $usersToRemove = 'NT AUTHORITY\Authenticated Users', 'BUILTIN\Users', 'NT AUTHORITY\NETWORK SERVICE'
+    $usersToRemove = 'NT AUTHORITY\Authenticated Users', 'BUILTIN\Users', 'BUILTIN\IIS_IUSRS', 'NT AUTHORITY\NETWORK SERVICE'
 
     if ($PSCmdlet.ShouldProcess($Path, 'Disabling permission inheritance')) {
         icacls ("$Path") /inheritance:d | Out-Null
