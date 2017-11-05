@@ -93,7 +93,7 @@ function Set-IISSiteAcl {
                 AppPathsWithModifyPerms = $AppPathsWithModifyPerms
                 AppPathsWithExecPerms   = $AppPathsWithExecPerms
             }
-            $permissions = Get-IISIcacls @paths
+            $permissions = Get-IISSiteDesiredAcl @paths
 
             ValidateAclPaths $permissions 'Cannot grant permissions; missing paths detected'
 

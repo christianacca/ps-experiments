@@ -11,10 +11,11 @@ $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 $Port = 80
 
-. .\src\IISSecurity\Set-IISSiteAcl.ps1
-. .\src\IISSecurity\Set-WebHardenedAcl.ps1
+Install-CaccaMissingModule IISSecurity
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
+
+Import-Module IISSecurity # note: auto-loading doesn't appear to be working for my custom module
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
@@ -77,8 +78,8 @@ Add-BackConnectionHostNames $spaHostName
 
 # Set file access permissions
 
-Set-WebHardenedAcl -Path $RootPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
-Set-WebHardenedAcl -Path $SitePhysicalPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
+Set-CaccaWebHardenedAcl -Path $RootPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
+Set-CaccaWebHardenedAcl -Path $SitePhysicalPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
 
 # file permissions: grant $AppPoolName sufficient to Spa virtual directory
 $spaAclParams = @{
@@ -88,7 +89,7 @@ $spaAclParams = @{
     AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
     AppPathsWithExecPerms = @('UDFs\PropertyBuilder.exe')
 }
-Set-IISSiteAcl @spaAclParams
+Set-CaccaIISSiteAcl @spaAclParams
 
 # file permissions: grant $AppPoolName sufficient to WinLogin virtual directory
 $winLoginAclParams = @{
@@ -96,4 +97,4 @@ $winLoginAclParams = @{
     AppPoolName = $mainAppPoolName
     AppPathsWithModifyPerms = @('App_Data')
 }
-Set-IISSiteAcl @winLoginAclParams
+Set-CaccaIISSiteAcl @winLoginAclParams

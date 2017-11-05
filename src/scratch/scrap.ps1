@@ -1,7 +1,2 @@
-. .\src\IISSecurity\Set-IISAppPoolIdentityAcl.ps1
-. .\src\IISSecurity\Get-IISIcacls.ps1
-
-# IsFullPath '\\'
-
-Get-IISIcacls -SitePath 'C:\inetpub\sites\FakeSite'
-Set-IISAppPoolIdentityAcl -SitePath 'C:\inetpub\sites\FakeSite' -AppPoolName 'Series5-AppPool'
+Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\sites\FakeSite'
+Set-IISSiteAcl -SitePath 'C:\inetpub\sites\FakeSite' -AppPoolName 'Series5-AppPool'

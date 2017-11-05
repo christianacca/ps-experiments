@@ -85,7 +85,7 @@ function Remove-IISSiteAcl {
                 AppPathsWithModifyPerms = $AppPathsWithModifyPerms
                 AppPathsWithExecPerms   = $AppPathsWithExecPerms
             }
-            $permissions = Get-IISIcacls @paths
+            $permissions = Get-IISSiteDesiredAcl @paths
 
             ValidateAclPaths $permissions 'Cannot remove permissions; missing paths detected'
 
