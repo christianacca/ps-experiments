@@ -10,9 +10,7 @@ $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 
-. .\src\IISSecurity\Remove-IISSiteAcl.ps1
-. .\src\scratch\Install-MissingScript.ps1
-
+Install-CaccaMissingModule IISSecurity -AutoImport
 Install-MissingScript Add-Hostnames
 Install-MissingScript Add-BackConnectionHostNames
 
@@ -30,13 +28,13 @@ $spaAclParams = @{
     AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens', 'UDFs')
     AppPathsWithExecPerms   = @('UDFs\PropertyBuilder.exe')
 }
-Remove-IISSiteAcl @spaAclParams
+Remove-CaccaIISSiteAcl @spaAclParams
 $winLoginAclParams = @{
     AppPath                 = $winLoginAppPath
     AppPoolName             = $mainAppPoolName 
     AppPathsWithModifyPerms = @('App_Data')
 }
-Remove-IISSiteAcl @winLoginAclParams
+Remove-CaccaIISSiteAcl @winLoginAclParams
 
 [Microsoft.Web.Administration.ServerManager]$manager = Get-IISServerManager
 

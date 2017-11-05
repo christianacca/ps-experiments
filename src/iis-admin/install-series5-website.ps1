@@ -11,7 +11,8 @@ $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 $Port = 80
 
-Install-CaccaMissingModule IISSecurity
+Install-CaccaMissingModule IISSecurity -AutoImport
+Install-CaccaMissingModule Unlock-IISConfig -AutoImport
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
 

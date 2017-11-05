@@ -13,7 +13,9 @@ function Install-MissingModule {
         [switch] $Force,
         
         [Parameter(Mandatory, ParameterSetName = 'ScriptBlock')]
-        [ScriptBlock] $ScriptBlock
+        [ScriptBlock] $ScriptBlock,
+
+        [switch] $AutoImport
     )
     
     begin {
@@ -43,7 +45,11 @@ function Install-MissingModule {
                 Default {
                     throw "ParameterSet '$($PSCmdlet.ParameterSetName)' not implementeds"
                 }
-            }            
+            }       
+            
+            if ($AutoImport) {
+                Import-Module $Name
+            }
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
