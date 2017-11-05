@@ -10,7 +10,7 @@ $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 
-. .\src\IISSecurity\Remove-IISAppPoolIdentityAcl.ps1
+. .\src\IISSecurity\Remove-IISSiteAcl.ps1
 . .\src\scratch\Install-MissingScript.ps1
 
 Install-MissingScript Add-Hostnames
@@ -21,6 +21,22 @@ $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
 $winLoginAppPath = Join-Path $RootPath $WinLoginRelativeAppPath
 $mainAppPoolName = 'Series5-AppPool'
 $spaHostName = 'local-series5'
+
+# remove file permissions
+$spaAclParams = @{
+    SitePath                = $SitePhysicalPath
+    AppPath                 = $spaAppPath
+    AppPoolName             = $mainAppPoolName 
+    AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens', 'UDFs')
+    AppPathsWithExecPerms   = @('UDFs\PropertyBuilder.exe')
+}
+Remove-IISSiteAcl @spaAclParams
+$winLoginAclParams = @{
+    AppPath                 = $winLoginAppPath
+    AppPoolName             = $mainAppPoolName 
+    AppPathsWithModifyPerms = @('App_Data')
+}
+Remove-IISSiteAcl @winLoginAclParams
 
 [Microsoft.Web.Administration.ServerManager]$manager = Get-IISServerManager
 
@@ -35,19 +51,3 @@ Stop-IISCommitDelay
 # Remove hostname from environment
 Remove-Hostnames $spaHostName
 Remove-BackConnectionHostNames $spaHostName
-
-# remove file permissions
-$spaAclParams = @{
-    SitePath                = $SitePhysicalPath
-    AppPath                 = $spaAppPath
-    AppPoolName             = $mainAppPoolName 
-    AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens')
-    AppPathsWithExecPerms   = @('UDFs\PropertyBuilder.exe')
-}
-Remove-IISAppPoolIdentityAcl @spaAclParams
-$winLoginAclParams = @{
-    AppPath                 = $winLoginAppPath
-    AppPoolName             = $mainAppPoolName 
-    AppPathsWithModifyPerms = @('App_Data')
-}
-Remove-IISAppPoolIdentityAcl @winLoginAclParams

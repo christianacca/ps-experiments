@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Remove the permissions that Set-IISAppPoolIdentityAcl assigns to the AppPool Identity
+Remove the permissions that Set-IISSiteAcl grants to the AppPool Identity
 
 .DESCRIPTION
-Remove the permissions that Set-IISAppPoolIdentityAcl assigns to the AppPool Identity
+Remove the permissions that Set-IISSiteAcl grants to the AppPool Identity
 
 .PARAMETER SitePath
 The physical Website path. Omit this path when configuring the permissions of a child web application only
@@ -26,28 +26,26 @@ Additional paths to remove permissions. Path(s) relative to AppPath can be suppl
 .EXAMPLE
 Example 1: Remove AppPool Identity file permissions from a site
 
-Remove-IISAppPoolIdentityAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolName 'MyWebApp1-AppPool'
+Remove-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolName 'MyWebApp1-AppPool'
 
 Example 2: Remove AppPool Identity file permissions from site and a child web application
 
-Remove-IISAppPoolIdentityAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolName 'MyWebApp1-AppPool'
+Remove-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolName 'MyWebApp1-AppPool'
 
 Example 3: Remove AppPool Identity file permissions from a child web application only
 
-Remove-IISAppPoolIdentityAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -AppPathsWithModifyPerms 'App_Data'
+Remove-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -AppPathsWithModifyPerms 'App_Data'
 
 #>
-function Remove-IISAppPoolIdentityAcl {
+function Remove-IISSiteAcl {
 
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Username')]
     param(
         [Parameter(ValueFromPipeline, Position = 1)]
-        [ValidateNotNullOrEmpty()]
         [ValidateScript( { Test-Path $_})]
         [string] $SitePath,
 
         [Parameter(ValueFromPipeline, Position = 2)]
-        [ValidateNotNullOrEmpty()]
         [string] $AppPath,
 
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'AppPool', Position = 0)]
@@ -73,12 +71,6 @@ function Remove-IISAppPoolIdentityAcl {
 
     process {
         try {
-            if ([string]::IsNullOrWhiteSpace($SitePath) -and ![System.IO.Path]::IsPathRooted($AppPath)) {
-                throw "AppPath must be a full path if SitePath is omitted"
-            }
-
-            # ensure consistent trailing backslashs
-            $SitePath = Join-Path $SitePath '\'
 
             $appPoolIdentityName = if ($PSCmdlet.ParameterSetName -eq 'AppPool') {
                 "IIS AppPool\$AppPoolName"
@@ -87,49 +79,24 @@ function Remove-IISAppPoolIdentityAcl {
                 $AppPoolUsername 
             }
 
-            $appFullPath = if ([string]::IsNullOrWhiteSpace($SitePath) -or (IsFullPath $AppPath)) {
-                $AppPath
+            $paths = @{
+                SitePath                = $SitePath
+                AppPath                 = $AppPath
+                AppPathsWithModifyPerms = $AppPathsWithModifyPerms
+                AppPathsWithExecPerms   = $AppPathsWithExecPerms
             }
-            else {
-                Join-Path $SitePath $AppPath
-            }
+            $permissions = Get-IISIcacls @paths
 
-            $getAppSubPath = {
-                if ([System.IO.Path]::IsPathRooted($_)) {
-                    $_
-                }
-                else {
-                    Join-Path $appFullPath $_
-                }
-            }
+            ValidateAclPaths $permissions 'Cannot remove permissions; missing paths detected'
 
-            $targetPaths = @()
-            $targetPaths += $AppPathsWithExecPerms | ForEach-Object $getAppSubPath
-            $targetPaths += $AppPathsWithModifyPerms | ForEach-Object $getAppSubPath
-            if ($appFullPath -ne $SitePath) {
-                $targetPaths += $appFullPath
-            }
-            if (![string]::IsNullOrWhiteSpace($SitePath)) {
-                $targetPaths += $SitePath
-            }
-            $aspNetTempFolder = 'C:\Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files'
-            $targetPaths += Get-ChildItem $aspNetTempFolder
+            $permissions | ForEach-Object {
+                if ($PSCmdlet.ShouldProcess($_.Path, "Removing user '$appPoolIdentityName'")) {
 
-            $targetPaths | Where-Object { -not(Test-Path $_) } -OutVariable missingPaths | ForEach-Object {
-                Write-Warning "Path not found: '$_'"
-            }
-            if ($missingPaths) {
-                throw "Cannot remove permissions; missing paths detected"
-            }
-
-            $targetPaths | ForEach-Object {
-                if ($PSCmdlet.ShouldProcess($_, "Removing user '$appPoolIdentityName'")) {
-
-                    $acl = (Get-Item $_).GetAccessControl('Access')
+                    $acl = (Get-Item $_.Path).GetAccessControl('Access')
                     $acl.Access | 
                         Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $appPoolIdentityName } |
                         ForEach-Object { $acl.RemoveAccessRuleAll($_) }
-                    Set-Acl -Path $_ -AclObject $acl
+                    Set-Acl -Path ($_.Path) -AclObject $acl
                 }
             }
         }

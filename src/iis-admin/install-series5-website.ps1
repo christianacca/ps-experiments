@@ -11,7 +11,7 @@ $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 $Port = 80
 
-. .\src\IISSecurity\Set-IISAppPoolIdentityAcl.ps1
+. .\src\IISSecurity\Set-IISSiteAcl.ps1
 . .\src\IISSecurity\Set-WebHardenedAcl.ps1
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
@@ -85,10 +85,10 @@ $spaAclParams = @{
     SitePath = $SitePhysicalPath
     AppPath = $spaAppPath
     AppPoolName = $mainAppPoolName
-    AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens')
+    AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
     AppPathsWithExecPerms = @('UDFs\PropertyBuilder.exe')
 }
-Set-IISAppPoolIdentityAcl @spaAclParams -WhatIf
+Set-IISSiteAcl @spaAclParams
 
 # file permissions: grant $AppPoolName sufficient to WinLogin virtual directory
 $winLoginAclParams = @{
@@ -96,4 +96,4 @@ $winLoginAclParams = @{
     AppPoolName = $mainAppPoolName
     AppPathsWithModifyPerms = @('App_Data')
 }
-Set-IISAppPoolIdentityAcl @winLoginAclParams
+Set-IISSiteAcl @winLoginAclParams
