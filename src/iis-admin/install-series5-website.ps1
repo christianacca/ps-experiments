@@ -2,13 +2,14 @@
 #Requires -Modules Install-Utils
 
 $ErrorActionPreference = 'Stop'
+# $VerbosePreference = 'Continue'
 
 $RootPath = 'C:\Git\Series5'
 $SiteName = 'Series5'
 $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
-$Port = 80
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
+$Port = 80
 
 . .\src\IISSecurity\Set-IISAppPoolIdentityAcl.ps1
 . .\src\IISSecurity\Set-WebHardenedAcl.ps1
@@ -87,7 +88,7 @@ $spaAclParams = @{
     AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens')
     AppPathsWithExecPerms = @('UDFs\PropertyBuilder.exe')
 }
-Set-IISAppPoolIdentityAcl @spaAclParams
+Set-IISAppPoolIdentityAcl @spaAclParams -WhatIf
 
 # file permissions: grant $AppPoolName sufficient to WinLogin virtual directory
 $winLoginAclParams = @{
