@@ -10,10 +10,12 @@ $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 
-Import-Module '.\src\IISSecurity\IISSecurity' -Force
-# Install-CaccaMissingModule IISSecurity -AutoImport
+Install-CaccaMissingModule IISSecurity
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
+
+# note: auto-loading not working for custom module
+Import-Module IISSecurity
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
@@ -37,9 +39,8 @@ $winLoginAclParams = @{
 }
 Remove-CaccaIISSiteAcl @winLoginAclParams
 
-[Microsoft.Web.Administration.ServerManager]$manager = Get-IISServerManager
-
 # Remove site
+[Microsoft.Web.Administration.ServerManager]$manager = Get-IISServerManager
 Start-IISCommitDelay
 $existingSite = $manager.Sites[$SiteName];
 $manager.Sites.Remove($existingSite)

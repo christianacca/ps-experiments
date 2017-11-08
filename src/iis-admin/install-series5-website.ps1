@@ -12,13 +12,14 @@ $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 $Port = 80
 
-Import-Module '.\src\IISSecurity\IISSecurity' -Force
-# Install-CaccaMissingModule IISSecurity -AutoImport
-Install-CaccaMissingModule Unlock-IISConfig -AutoImport
+Install-CaccaMissingModule IISSecurity
+Install-CaccaMissingModule Unlock-IISConfig
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
 
-# Import-Module IISSecurity # note: auto-loading doesn't appear to be working for my custom module
+# note: auto-loading not working for custom module
+Import-Module IISSecurity
+Import-Module Unlock-IISConfig
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
