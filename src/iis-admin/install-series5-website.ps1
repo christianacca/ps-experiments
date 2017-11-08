@@ -1,9 +1,9 @@
 #Requires -RunAsAdministrator
-#Requires -Modules Install-Utils
+#Requires -Modules InstallUtils
 
 $ErrorActionPreference = 'Stop'
 
-Import-Module Install-Utils
+Import-Module InstallUtils # note: auto-loading not working for custom module
 
 $RootPath = 'C:\Git\Series5'
 $SiteName = 'Series5'
@@ -13,13 +13,13 @@ $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 $Port = 80
 
 Install-CaccaMissingModule IISSecurity
-Install-CaccaMissingModule Unlock-IISConfig
+Install-CaccaMissingModule IISConfigUnlock
 Install-CaccaMissingScript Add-Hostnames
 Install-CaccaMissingScript Add-BackConnectionHostNames
 
 # note: auto-loading not working for custom module
 Import-Module IISSecurity
-Import-Module Unlock-IISConfig
+Import-Module IISConfigUnlock
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath

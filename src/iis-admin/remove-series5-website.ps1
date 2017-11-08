@@ -2,7 +2,8 @@
 #Requires -Modules Install-Utils
 
 $ErrorActionPreference = 'Stop'
-# $VerbosePreference = 'Continue'
+
+Import-Module InstallUtils # note: auto-loading not working for custom module
 
 $RootPath = 'C:\Git\Series5'
 $SiteName = 'Series5'

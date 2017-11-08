@@ -9,7 +9,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'Unlock-IISConfig.psm1'
+RootModule = 'IISConfigUnlock.psm1'
 
 # Version number of this module.
 ModuleVersion = '0.1.0'

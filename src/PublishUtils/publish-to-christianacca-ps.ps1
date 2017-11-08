@@ -8,4 +8,4 @@ $params = @{
     Repository = 'christianacca-ps'
     NuGetApiKey = $apiKey
 }
-Publish-Module -Path '.\src\Install-Utils\Install-Utils' @params
+Publish-Module -Path '.\src\PublishUtils\PublishUtils' @params

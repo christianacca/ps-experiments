@@ -8,4 +8,4 @@ $params = @{
     Repository = 'christianacca-ps'
     NuGetApiKey = $apiKey
 }
-Publish-Module -Path '.\src\Unlock-IISConfig\Unlock-IISConfig' @params
+Publish-Module -Path '.\src\InstallUtils\InstallUtils' @params
