@@ -11,10 +11,10 @@ The physical Website path. Omit this path when configuring the permissions of a 
 .PARAMETER AppPath
 The physical Web application path. A path relative to SitePath can be supplied. Defaults to SitePath
 
-.PARAMETER AppPathsWithModifyPerms
+.PARAMETER ModifyPaths
 Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
 
-.PARAMETER AppPathsWithExecPerms
+.PARAMETER ExecutePaths
 Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
 
 .EXAMPLE
@@ -28,7 +28,7 @@ Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1'
 
 Example 3: Return file permissions for a child web application only
 
-Get-IISSiteDesiredAcl -AppPath 'C:\Apps\MyWebApp1' -AppPathsWithModifyPerms 'App_Data'
+Get-IISSiteDesiredAcl -AppPath 'C:\Apps\MyWebApp1' -ModifyPaths 'App_Data'
 
 #>
 function Get-IISSiteDesiredAcl {
@@ -43,11 +43,15 @@ function Get-IISSiteDesiredAcl {
 
         [Parameter(ValueFromPipeline)]
         [ValidateNotNull()]
-        [string[]] $AppPathsWithModifyPerms = @(),
+        [string[]] $ModifyPaths = @(),
 
         [Parameter(ValueFromPipeline)]
         [ValidateNotNull()]
-        [string[]] $AppPathsWithExecPerms = @()
+        [string[]] $ExecutePaths = @(),
+
+        [switch] $SiteShellOnly,
+
+        [switch] $SkipTempAspNetFiles
     )
     begin {
         $callerEA = $ErrorActionPreference
@@ -60,12 +64,29 @@ function Get-IISSiteDesiredAcl {
                 Description = $Description
             }
         }
+
+        function Add([System.Collections.Specialized.OrderedDictionary]$Results, [PSCustomObject] $Permission) {
+            $key = Join-Path $Permission.Path '\'
+            if ($Results.Contains($key)) {
+                $original = $Results[$key]
+                Write-Warning "Path '$($Permission.Path)' being assigned permissive rights; was: '$($original.Description)'; now: '$($Permission.Description)'"
+            }
+            $Results[$key] = $Permission
+        }
     }
 
     process {
         try {
             if ([string]::IsNullOrWhiteSpace($SitePath) -and ![System.IO.Path]::IsPathRooted($AppPath)) {
                 throw "AppPath must be a full path if SitePath is omitted"
+            }
+
+            if ([string]::IsNullOrWhiteSpace($SitePath) -and [string]::IsNullOrWhiteSpace($AppPath)) {
+                throw "SitePath and/or AppPath must be supplied"
+            }
+
+            if ([string]::IsNullOrWhiteSpace($SitePath) -and $SiteShellOnly.IsPresent) {
+                throw "SiteShellOnly must be used in conjunction with the SitePath parameter"
             }
 
             # ensure consistent trailing backslashs
@@ -92,21 +113,46 @@ function Get-IISSiteDesiredAcl {
                 }
             }
 
-            $targetPaths = @()
-            if (![string]::IsNullOrWhiteSpace($SitePath) -and $appFullPath -ne $SitePath) {
-                ToIcaclsPermission $SitePath '(OI)(NP)R' 'read permission to this folder and files (no inherit)'
+            $permissions = [ordered]@{}
+            if ([string]::IsNullOrWhiteSpace($AppPath) -or $SitePath -eq $appFullPath) {
+                # Site only...
+
+                if ($SiteShellOnly) {
+                    Add $permissions (ToIcaclsPermission $SitePath '(OI)(NP)R' 'read permission to this folder and files (no inherit)')
+                }
+                else {
+                    Add $permissions (ToIcaclsPermission $appFullPath '(OI)(CI)R' 'read permission (inherit)')
+                }                
             }
-            ToIcaclsPermission $appFullPath '(OI)(CI)R' 'read permission (inherit)'
-            $AppPathsWithModifyPerms | ForEach-Object $getAppSubPath | ForEach-Object {
-                ToIcaclsPermission $_ '(OI)(CI)M' 'modify permission (inherit)'
+            elseif ([string]::IsNullOrWhiteSpace($SitePath)) {
+
+                # App only...
+
+                Add $permissions (ToIcaclsPermission $appFullPath '(OI)(CI)R' 'read permission (inherit)')
             }
-            $AppPathsWithExecPerms | ForEach-Object $getAppSubPath | ForEach-Object {
-                ToIcaclsPermission $_ '(RX)' 'read+execute permission'
+            else {
+                # Site and app...
+
+                if ($PSBoundParameters.ContainsKey('SiteShellOnly') -and !$SiteShellOnly) {
+                    Add $permissions (ToIcaclsPermission $SitePath '(OI)(CI)R' 'read permission (inherit)')
+                } else {
+                    Add $permissions (ToIcaclsPermission $SitePath '(OI)(NP)R' 'read permission to this folder and files (no inherit)')
+                }
+                Add $permissions (ToIcaclsPermission $appFullPath '(OI)(CI)R' 'read permission (inherit)')
             }
-            $aspNetTempFolder = 'C:\Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files'
-            Get-ChildItem $aspNetTempFolder | Select-Object -Exp FullName | ForEach-Object {
-                ToIcaclsPermission $_ '(OI)(CI)R' 'read permission (inherit)'
+            $ModifyPaths | ForEach-Object $getAppSubPath | ForEach-Object {
+                Add $permissions (ToIcaclsPermission $_ '(OI)(CI)M' 'modify permission (inherit)')
             }
+            $ExecutePaths | ForEach-Object $getAppSubPath | ForEach-Object {
+                Add $permissions (ToIcaclsPermission $_ '(RX)' 'read+execute permission')
+            }
+            if (!$SkipTempAspNetFiles) {
+                $aspNetTempFolder = 'C:\Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files'
+                Get-ChildItem $aspNetTempFolder | Select-Object -Exp FullName | ForEach-Object {
+                    Add $permissions (ToIcaclsPermission $_ '(OI)(CI)R' 'read permission (inherit)')
+                }
+            }
+            $permissions.Values
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

@@ -1,2 +1,6 @@
-Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\sites\FakeSite'
-Set-IISSiteAcl -SitePath 'C:\inetpub\sites\FakeSite' -AppPoolName 'Series5-AppPool'
+Set-Location C:\Git\ps-experiments\
+
+. .\src\IISSecurity\IISSecurity\Get-IISSiteDesiredAcl.ps1
+
+Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -EA Stop
+

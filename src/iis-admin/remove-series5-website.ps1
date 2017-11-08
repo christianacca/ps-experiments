@@ -10,9 +10,10 @@ $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 
-Install-CaccaMissingModule IISSecurity -AutoImport
-Install-MissingScript Add-Hostnames
-Install-MissingScript Add-BackConnectionHostNames
+Import-Module '.\src\IISSecurity\IISSecurity' -Force
+# Install-CaccaMissingModule IISSecurity -AutoImport
+Install-CaccaMissingScript Add-Hostnames
+Install-CaccaMissingScript Add-BackConnectionHostNames
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
@@ -22,17 +23,17 @@ $spaHostName = 'local-series5'
 
 # remove file permissions
 $spaAclParams = @{
-    SitePath                = $SitePhysicalPath
-    AppPath                 = $spaAppPath
-    AppPoolName             = $mainAppPoolName 
-    AppPathsWithModifyPerms = @('App_Data', 'Series5Seed\screens', 'UDFs')
-    AppPathsWithExecPerms   = @('UDFs\PropertyBuilder.exe')
+    SitePath     = $SitePhysicalPath
+    AppPath      = $spaAppPath
+    AppPoolName  = $mainAppPoolName 
+    ModifyPaths  = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
+    ExecutePaths = @('UDFs\PropertyBuilder.exe')
 }
 Remove-CaccaIISSiteAcl @spaAclParams
 $winLoginAclParams = @{
-    AppPath                 = $winLoginAppPath
-    AppPoolName             = $mainAppPoolName 
-    AppPathsWithModifyPerms = @('App_Data')
+    AppPath     = $winLoginAppPath
+    AppPoolName = $mainAppPoolName 
+    ModifyPaths = @('App_Data')
 }
 Remove-CaccaIISSiteAcl @winLoginAclParams
 

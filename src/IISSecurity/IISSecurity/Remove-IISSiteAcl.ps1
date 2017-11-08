@@ -17,10 +17,10 @@ The name of the AppPool that will be used to derive the User account to remove p
 .PARAMETER AppPoolUsername
 The name of a specific User account whose permissions are to be removed
 
-.PARAMETER AppPathsWithModifyPerms
+.PARAMETER ModifyPaths
 Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
 
-.PARAMETER AppPathsWithExecPerms
+.PARAMETER ExecutePaths
 Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
 
 .EXAMPLE
@@ -34,7 +34,7 @@ Remove-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolNa
 
 Example 3: Remove AppPool Identity file permissions from a child web application only
 
-Remove-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -AppPathsWithModifyPerms 'App_Data'
+Remove-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -ModifyPaths 'App_Data'
 
 #>
 function Remove-IISSiteAcl {
@@ -42,7 +42,7 @@ function Remove-IISSiteAcl {
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Username')]
     param(
         [Parameter(ValueFromPipeline, Position = 1)]
-        [ValidateScript( { Test-Path $_})]
+        [ValidateScript( {CheckPathExists $_})]
         [string] $SitePath,
 
         [Parameter(ValueFromPipeline, Position = 2)]
@@ -58,11 +58,13 @@ function Remove-IISSiteAcl {
 
         [Parameter(ValueFromPipeline)]
         [ValidateNotNull()]
-        [string[]] $AppPathsWithModifyPerms = @(),
+        [string[]] $ModifyPaths = @(),
 
         [Parameter(ValueFromPipeline)]
         [ValidateNotNull()]
-        [string[]] $AppPathsWithExecPerms = @()
+        [string[]] $ExecutePaths = @(),
+        
+        [switch] $SiteShellOnly
     )
     begin {
         $callerEA = $ErrorActionPreference
@@ -80,10 +82,11 @@ function Remove-IISSiteAcl {
             }
 
             $paths = @{
-                SitePath                = $SitePath
-                AppPath                 = $AppPath
-                AppPathsWithModifyPerms = $AppPathsWithModifyPerms
-                AppPathsWithExecPerms   = $AppPathsWithExecPerms
+                SitePath      = $SitePath
+                AppPath       = $AppPath
+                ModifyPaths   = $ModifyPaths
+                ExecutePaths  = $ExecutePaths
+                SiteShellOnly = $SiteShellOnly
             }
             $permissions = Get-IISSiteDesiredAcl @paths
 

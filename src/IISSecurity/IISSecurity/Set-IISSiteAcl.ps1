@@ -10,8 +10,8 @@ These bare minium permissions include:
 - SitePath: Read 'This folder', and files (no inherit)
 - AppPath: Read 'This folder', file and subfolder permissions (inherited)
 - Temporary ASP.NET Files: Read 'This folder', file and subfolder permissions (inherited)
-- AppPathsWithModifyPerms: modify 'This folder', file and subfolder permissions (inherited)
-- AppPathsWithExecPerms: read+execute file (no inherit)
+- ModifyPaths: modify 'This folder', file and subfolder permissions (inherited)
+- ExecutePaths: read+execute file (no inherit)
 
 .PARAMETER SitePath
 The physical Website path. Omit this path when configuring the permissions of a child web application only
@@ -25,10 +25,10 @@ The name of the AppPool that will be used to derive the User account to grant pe
 .PARAMETER AppPoolUsername
 The name of a specific User account whose permissions are to be granted
 
-.PARAMETER AppPathsWithModifyPerms
+.PARAMETER ModifyPaths
 Additional paths to grant modify (inherited) permissions. Path(s) relative to AppPath can be supplied
 
-.PARAMETER AppPathsWithExecPerms
+.PARAMETER ExecutePaths
 Additional paths to grant read+excute permissions. Path(s) relative to AppPath can be supplied
 
 .EXAMPLE
@@ -42,7 +42,7 @@ Set-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolName 
 
 Example 3: Grant child application only file permissions to a specific user. Include folders that require modify permissions 
 
-Set-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -AppPathsWithModifyPerms 'App_Data'
+Set-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -ModifyPaths 'App_Data'
 
 #>
 function Set-IISSiteAcl {
@@ -50,7 +50,7 @@ function Set-IISSiteAcl {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(ValueFromPipeline, Position = 1)]
-        [ValidateScript( { Test-Path $_})]
+        [ValidateScript( {CheckPathExists $_})]
         [string] $SitePath,
     
         [Parameter(ValueFromPipeline, Position = 2)]
@@ -66,11 +66,13 @@ function Set-IISSiteAcl {
     
         [Parameter(ValueFromPipeline)]
         [ValidateNotNull()]
-        [string[]] $AppPathsWithModifyPerms = @(),
+        [string[]] $ModifyPaths = @(),
     
         [Parameter(ValueFromPipeline)]
         [ValidateNotNull()]
-        [string[]] $AppPathsWithExecPerms = @()
+        [string[]] $ExecutePaths = @(),
+
+        [switch] $SiteShellOnly
     )
     begin {
         $callerEA = $ErrorActionPreference
@@ -88,10 +90,11 @@ function Set-IISSiteAcl {
             }
     
             $paths = @{
-                SitePath                = $SitePath
-                AppPath                 = $AppPath
-                AppPathsWithModifyPerms = $AppPathsWithModifyPerms
-                AppPathsWithExecPerms   = $AppPathsWithExecPerms
+                SitePath      = $SitePath
+                AppPath       = $AppPath
+                ModifyPaths   = $ModifyPaths
+                ExecutePaths  = $ExecutePaths
+                SiteShellOnly = $SiteShellOnly
             }
             $permissions = Get-IISSiteDesiredAcl @paths
 
