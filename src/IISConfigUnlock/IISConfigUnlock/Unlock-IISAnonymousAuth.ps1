@@ -8,12 +8,13 @@ function Unlock-IISAnonymousAuth {
     )
     
     begin {
+        Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
     }
     
     process {
         try {
-            $ErrorActionPreference = 'Stop'
 
             Unlock-IISConfigSection `
                 -SectionPath 'system.webServer/security/authentication/anonymousAuthentication' `

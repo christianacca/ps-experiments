@@ -29,12 +29,13 @@ function Publish-ScriptUrlHelper {
     )
     
     begin {
+        Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
     }
     
     process {
-        $ErrorActionPreference = 'Stop'
-
+        
         try {
             $scriptName = "$Name.ps1"
             $scriptPath = "$env:TEMP\$scriptName"

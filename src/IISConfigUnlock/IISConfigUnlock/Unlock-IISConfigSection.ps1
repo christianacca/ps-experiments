@@ -12,12 +12,13 @@ function Unlock-IISConfigSection {
     )
     
     begin {
+        Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
     }
     
     process {
         try {
-            $ErrorActionPreference = 'Stop'
 
             if (-not $ServerManager) {
                 $ServerManager = Get-IISServerManager

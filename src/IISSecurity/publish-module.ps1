@@ -1,5 +1,8 @@
 $ErrorActionPreference = 'Stop'
 
+$modulePath = Resolve-Path "$PSScriptRoot\*\*.psd1"
+$moduleName = Split-Path (Split-Path $modulePath) -Leaf
+
 $apiKey = Read-Host 'Enter NuGet Api Key'
 if ([string]::IsNullOrWhiteSpace($apiKey)){
     return
@@ -7,5 +10,6 @@ if ([string]::IsNullOrWhiteSpace($apiKey)){
 $params = @{
     Repository = 'christianacca-ps'
     NuGetApiKey = $apiKey
+    Path = "$PSScriptRoot\$moduleName"
 }
-Publish-Module -Path '.\src\IISConfigUnlock\IISConfigUnlock' @params
+Publish-Module @params

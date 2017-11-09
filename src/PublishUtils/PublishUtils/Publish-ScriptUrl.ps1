@@ -1,13 +1,12 @@
-<#
-.SYNOPSIS
-Publishes a powershell script fetched from a url
-
-.DESCRIPTION
-     Publishes a powershell script fetched from a url
-
-#>
 function Publish-ScriptUrl {
+    <#
+    .SYNOPSIS
+    Publishes a powershell script fetched from a url
 
+    .DESCRIPTION
+        Publishes a powershell script fetched from a url
+
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
@@ -29,11 +28,12 @@ function Publish-ScriptUrl {
     )
     
     begin {
+        Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
     }
     
     process {
-        $ErrorActionPreference = 'Stop'
 
         try {
             $scriptName = "$Name.ps1"
