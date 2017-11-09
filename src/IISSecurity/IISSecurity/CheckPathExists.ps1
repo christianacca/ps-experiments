@@ -1,4 +1,6 @@
 function CheckPathExists([string] $Path) {
+    Set-StrictMode -Version Latest
+    
     if ([string]::IsNullOrWhiteSpace($Path)) {
         return $true
     }

@@ -4,8 +4,7 @@ $ErrorActionPreference = 'Stop'
 
 Install-Module IISSecurity -RequiredVersion '0.1.0'
 Install-Module IISConfigUnlock -RequiredVersion '0.1.0'
-Install-Script Add-Hostnames -RequiredVersion '1.0.0'
-Install-Script Add-BackConnectionHostNames -RequiredVersion '1.0.0'
+Install-Module HostNameUtils -RequiredVersion '1.0.0'
 
 
 $RootPath = 'C:\Git\Series5'
@@ -16,7 +15,8 @@ $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 $Port = 80
 
 Import-Module IISSecurity -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'
-Import-Module IISConfigUnlock -RequiredVersion '0.1.0' -MaximumVersion '0.1.999'
+Import-Module IISConfigUnlock -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'
+Import-Module HostNameUtils -MinimumVersion '1.0.0' -MaximumVersion '1.999.999'
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
@@ -93,9 +93,9 @@ Stop-IISCommitDelay
 
 
 # register hostname so that local DNS resolves the website host name to the IP of this machine
-Add-Hostnames '127.0.0.1' $spaHostName
+Add-TecBoxHostnames '127.0.0.1' $spaHostName
 # this is required for windows auth to work when host name "loops back" to the same machine
-Add-BackConnectionHostNames $spaHostName
+Add-TecBoxBackConnectionHostNames $spaHostName
 
 # Harden webserver
 Set-CaccaWebHardenedAcl -Path $RootPath -SiteAdminsGroup 'BSW\Series5000Dev Group'

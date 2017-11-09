@@ -1,6 +1,4 @@
-﻿#Requires -Modules InstallUtils
-
-$projectRoot = Resolve-Path "$PSScriptRoot\.."
+﻿$projectRoot = Resolve-Path "$PSScriptRoot\.."
 $modulePath = Resolve-Path "$projectRoot\*\*.psd1"
 $moduleRoot = Split-Path $modulePath
 $moduleName = Split-Path $moduleRoot -Leaf
@@ -29,11 +27,11 @@ Describe "General project validation: $moduleName" {
     It 'Module auto-imports dependencies' {
         # given
         # dependencies already installed
-        Get-Module IISSecurity -All | Remove-Module
-        Get-Module IISConfigUnlock -All | Remove-Module
         Install-Module IISSecurity -RequiredVersion '0.1.0'
         Install-Module IISConfigUnlock -RequiredVersion '0.1.0'
-        # Module not already loaded into memory
+        # Module and it's dependencies not already loaded into memory
+        Get-Module IISSecurity -All | Remove-Module
+        Get-Module IISConfigUnlock -All | Remove-Module
         Get-Module $moduleName -All | Remove-Module
 
         # when

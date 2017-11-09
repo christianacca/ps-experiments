@@ -1,38 +1,45 @@
-<#
-.SYNOPSIS
-Returns the least privilege file/folder permissions that should be granted to an IIS AppPool useracount
-
-.DESCRIPTION
-Returns the least privilege file/folder permissions that should be granted to an IIS AppPool useracount
-
-.PARAMETER SitePath
-The physical Website path. Omit this path when configuring the permissions of a child web application only
-
-.PARAMETER AppPath
-The physical Web application path. A path relative to SitePath can be supplied. Defaults to SitePath
-
-.PARAMETER ModifyPaths
-Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
-
-.PARAMETER ExecutePaths
-Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
-
-.EXAMPLE
-Example 1: Return file permissions for a site
-
-Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot'
-
-Example 2: Return file permissions for a site and child web application
-
-Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1'
-
-Example 3: Return file permissions for a child web application only
-
-Get-IISSiteDesiredAcl -AppPath 'C:\Apps\MyWebApp1' -ModifyPaths 'App_Data'
-
-#>
 function Get-IISSiteDesiredAcl {
+    <#
+    .SYNOPSIS
+    Returns the least privilege file/folder permissions that should be granted to an IIS AppPool useracount
 
+    .DESCRIPTION
+    Returns the least privilege file/folder permissions that should be granted to an IIS AppPool useracount
+
+    .PARAMETER SitePath
+    The physical Website path. Omit this path when configuring the permissions of a child web application only
+
+    .PARAMETER AppPath
+    The physical Web application path. A path relative to SitePath can be supplied. Defaults to SitePath
+
+    .PARAMETER ModifyPaths
+    Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
+
+    .PARAMETER ExecutePaths
+    Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
+
+    .EXAMPLE
+    Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot'
+
+    Description
+    -----------
+    Return file permissions for a site
+
+    .EXAMPLE
+    Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1'
+
+    Description
+    -----------
+    Return file permissions for a site and child web application
+
+    .EXAMPLE
+    Get-IISSiteDesiredAcl -AppPath 'C:\Apps\MyWebApp1' -ModifyPaths 'App_Data'
+
+    Description
+    -----------
+    Return file permissions for a child web application only
+
+    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline)]
@@ -54,6 +61,7 @@ function Get-IISSiteDesiredAcl {
         [switch] $SkipTempAspNetFiles
     )
     begin {
+        Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 
@@ -135,7 +143,8 @@ function Get-IISSiteDesiredAcl {
 
                 if ($PSBoundParameters.ContainsKey('SiteShellOnly') -and !$SiteShellOnly) {
                     Add $permissions (ToIcaclsPermission $SitePath '(OI)(CI)R' 'read permission (inherit)')
-                } else {
+                }
+                else {
                     Add $permissions (ToIcaclsPermission $SitePath '(OI)(NP)R' 'read permission to this folder and files (no inherit)')
                 }
                 Add $permissions (ToIcaclsPermission $appFullPath '(OI)(CI)R' 'read permission (inherit)')

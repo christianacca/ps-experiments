@@ -8,6 +8,7 @@ function ValidateAclPaths {
         [ValidateNotNullOrEmpty()]
         [string] $ErrorMessage
     )
+    Set-StrictMode -Version Latest
 
     $Permissions | Select-Object -Exp Path | 
         Where-Object { -not(Test-Path $_ ) } -OutVariable missingPaths | 

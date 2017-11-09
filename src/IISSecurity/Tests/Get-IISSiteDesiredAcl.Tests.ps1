@@ -6,16 +6,6 @@ Import-Module $modulePath
 
 . "$PSScriptRoot\Compare-ObjectProperties.ps1"
 
-Describe "Once" {
-    It "site only" {
-        $permissions = Get-CaccaIISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -EA Stop
-
-        $expected = 0..4 | % { '(OI)(CI)R' }
-        $permissions.Count | Should -Be 5
-        Compare-Object $permissions.Permission $expected | select -Exp InputObject | Should -Be $null
-    }
-}
-
 Describe "Get-IISSiteDesiredAcl" {
     It "Can be import" {
         Get-Module $moduleName | Should -Not -BeNullOrEmpty
