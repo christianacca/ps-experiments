@@ -1,9 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $VerbosePreference = 'SilentlyContinue'
 
-. .\src\scratch\Install-MissingScript.ps1
-
-Install-MissingScript Publish-ScriptUrl -Repository christianacca-ps
+Install-Script Publish-ScriptUrl -RequiredVersion '0.1.0'
 
 
 $apiKey = Read-Host 'Enter NuGet Api Key'

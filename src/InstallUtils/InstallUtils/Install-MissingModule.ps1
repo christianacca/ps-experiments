@@ -13,7 +13,9 @@ function Install-MissingModule {
         [switch] $Force,
         
         [Parameter(Mandatory, ParameterSetName = 'ScriptBlock')]
-        [ScriptBlock] $ScriptBlock
+        [ScriptBlock] $ScriptBlock,
+
+        [version] $RequiredVersion
     )
     
     begin {
@@ -29,13 +31,9 @@ function Install-MissingModule {
 
             Write-Verbose "Module $Name not found... installing now"
             switch ($PSCmdlet.ParameterSetName) {
-                'Name' { 
-                    if ($PSBoundParameters.ContainsKey('Repository')) {
-                        Install-Module $Name -Repository $Repository -Force:$Force
-                    }
-                    else {
-                        Install-Module $Name -Force:$Force
-                    }
+                'Name' {
+                    $installParams = @{} + $PSBoundParameters
+                    Install-Module @installParams
                 }
                 'ScriptBlock' {
                     & $ScriptBlock

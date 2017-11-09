@@ -1,9 +1,11 @@
 #Requires -RunAsAdministrator
-#Requires -Modules Install-Utils
 
 $ErrorActionPreference = 'Stop'
 
-Import-Module InstallUtils # note: auto-loading not working for custom module
+Install-Module IISSecurity -RequiredVersion '0.1.0'
+Install-Script Add-Hostnames -RequiredVersion '1.0.0'
+Install-Script Add-BackConnectionHostNames -RequiredVersion '1.0.0'
+
 
 $RootPath = 'C:\Git\Series5'
 $SiteName = 'Series5'
@@ -11,12 +13,7 @@ $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 
-Install-CaccaMissingModule IISSecurity
-Install-CaccaMissingScript Add-Hostnames
-Install-CaccaMissingScript Add-BackConnectionHostNames
-
-# note: auto-loading not working for custom module
-Import-Module IISSecurity
+Import-Module IISSecurity -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
