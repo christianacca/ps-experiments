@@ -5,6 +5,7 @@ Get-Module $moduleName -All | Remove-Module
 Import-Module $modulePath
 
 $testSiteName = 'DeleteMeSite'
+$testAppPoolName = "$testSiteName-AppPool"
 $sitePath = "C:\inetpub\sites\$testSiteName"
 $tempSitePath = "$Env:TEMP\$testSiteName"
 
@@ -29,6 +30,7 @@ Describe "New-IISWebsite" {
         New-CaccaIISWebsite $testSiteName $tempSitePath
 
         # then
+        Reset-IISServerManager -Confirm:$false # make sure to read from saved settings
         [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
         $site | Should -Not -BeNullOrEmpty
         $binding = $site.Bindings[0]
@@ -75,16 +77,52 @@ Describe "New-IISWebsite" {
         $site.Applications["/"].ApplicationPoolName | Should -Be 'local-site-AppPool'
     }
 
-    It "-ServerManager" {
+    It "Pipeline property binding" -Skip {
         # given
-        $manager = Get-IISServerManager
+        $siteParams = @{
+            SiteName = $testSiteName
+            Path     = $tempSitePath
+            Port = 80
+            Protocol = 'http'
+            HostName = 'local-site'
+            SiteConfig = {}
+            ModifyPaths = @()
+            ExecutePaths = @()
+            SiteShellOnly = $true
+        }
 
         # when
-        Start-IISCommitDelay
-        New-CaccaIISWebsite $testSiteName -ServerManager $manager
+        New-CaccaIISWebsite $testSiteName -HostName 'local-site'
 
         # then
+        [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
+        $site | Should -Not -BeNullOrEmpty
+        $site.Bindings[0].Host | Should -Be 'local-site'
+        $site.Applications["/"].ApplicationPoolName | Should -Be 'local-site-AppPool'
+    }
+
+    It '-Commit:$false, transation rolled back' {
+        # when
+        Start-IISCommitDelay
+        New-CaccaIISWebsite $testSiteName $tempSitePath -Commit:$false
         Stop-IISCommitDelay -Commit:$false
-        Get-IISSite $testSiteName | Should -Be $null        
+
+        # then
+        Reset-IISServerManager -Confirm:$false
+        Get-IISSite $testSiteName | Should -Be $null
+        # note that file permissions were NOT rolled back (is this a problem?)
+        $identities = (Get-Acl $tempSitePath).Access.IdentityReference
+        $identities | ? Value -eq 'IIS AppPool\DeleteMeSite-AppPool' | Should -Not -BeNullOrEmpty  
+    }
+
+    It '-Commit:$false, transation committed' {
+        # when
+        Start-IISCommitDelay
+        New-CaccaIISWebsite $testSiteName -Commit:$false
+        Stop-IISCommitDelay
+
+        # then
+        Reset-IISServerManager -Confirm:$false
+        Get-IISSite $testSiteName | Should -Not -Be $null
     }
 }

@@ -40,8 +40,8 @@ function New-IISWebsite {
         [switch] $Force,
 
         [switch] $PassThru,
-
-        [Microsoft.Web.Administration.ServerManager] $ServerManager
+        
+        [switch] $Commit
     )
     
     begin {
@@ -75,12 +75,15 @@ function New-IISWebsite {
         if ($AppPoolConfig -eq $null) {
             $AppPoolConfig = {}
         }
-        if (-not $ServerManager) {
-            $ServerManager = Get-IISServerManager
+        if (!$PSBoundParameters.ContainsKey('Commit')) {
+            $Commit = $true
+        }
+        $isErrored = $false
+
+        $ServerManager = Get-IISServerManager
+        if ($Commit) {
             Start-IISCommitDelay
         }
-
-        $isErrored = $false
     }
     
     process {
@@ -146,7 +149,7 @@ function New-IISWebsite {
     }
 
     end {
-        if ($PSBoundParameters.ContainsKey('ServerManager')) {
+        if ($Commit) {
             Stop-IISCommitDelay -Commit:(!$isErrored)
         }
     }
