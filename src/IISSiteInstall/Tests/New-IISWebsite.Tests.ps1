@@ -8,20 +8,36 @@ $testSiteName = 'DeleteMeSite'
 $testAppPoolName = "$testSiteName-AppPool"
 $sitePath = "C:\inetpub\sites\$testSiteName"
 $tempSitePath = "$Env:TEMP\$testSiteName"
+$appPoolNames = [System.Collections.ArrayList]::new()
 
 function Cleanup {
+    Start-IISCommitDelay
     Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WarningAction 'Ignore'
+    $manager = Get-IISServerManager
+    foreach ($poolName in $script:appPoolNames) {
+        $pool = $manager.ApplicationPools[$poolName]
+        if ($pool) {
+            $manager.ApplicationPools.Remove($pool) 
+        }
+    }
+    Stop-IISCommitDelay
+    Reset-IISServerManager -Confirm:$false
     Remove-Item $tempSitePath -Recurse -Confirm:$false -EA Ignore
     Remove-Item $sitePath -Recurse -Confirm:$false -EA Ignore
 }
 
-Describe "New-IISWebsite" {
+function RegisterAppPoolCleanup ([string] $Name) {
+    $script:appPoolNames.Add($Name)
+}
+
+Describe 'New-IISWebsite' {
     BeforeEach {
-        Reset-IISServerManager -Confirm:$false -WarningAction 'Ignore'
+        $Script:appPoolNames.Clear()
+        RegisterAppPoolCleanup $testAppPoolName
         Cleanup
     }
 
-    AfterAll {
+    AfterEach {
         Cleanup
     }
 
@@ -30,16 +46,15 @@ Describe "New-IISWebsite" {
         New-CaccaIISWebsite $testSiteName $tempSitePath
 
         # then
-        Reset-IISServerManager -Confirm:$false # make sure to read from saved settings
         [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
         $site | Should -Not -BeNullOrEmpty
         $binding = $site.Bindings[0]
         $binding.Protocol | Should -Be 'http'
         $binding.EndPoint.Port | Should -Be 80
-        $site.Applications["/"].ApplicationPoolName | Should -Be 'DeleteMeSite-AppPool'
+        $site.Applications["/"].ApplicationPoolName | Should -Be $testAppPoolName
         $site.Applications["/"].VirtualDirectories["/"].PhysicalPath | Should -Be $tempSitePath
         $identities = (Get-Acl $tempSitePath).Access.IdentityReference
-        $identities | ? Value -eq 'IIS AppPool\DeleteMeSite-AppPool' | Should -Not -BeNullOrEmpty
+        $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
     }
 
     It "No Path" {
@@ -54,7 +69,7 @@ Describe "New-IISWebsite" {
 
     It "-SiteConfig" {
         # given
-        $siteArg = $null
+        [Microsoft.Web.Administration.Site] $siteArg = $null
         $siteConfig = {
             $siteArg = $_
         }
@@ -63,10 +78,13 @@ Describe "New-IISWebsite" {
         $site = New-CaccaIISWebsite $testSiteName -SiteConfig $siteConfig -PassThru
 
         # then
-        $siteArg | Should -Be $site
+        $siteArg | Should -Not -Be $null
+        $siteArg.Name | Should -Be ($site.Name)
     }
 
     It "-HostName" {
+        RegisterAppPoolCleanup 'local-site-AppPool'
+
         # when
         New-CaccaIISWebsite $testSiteName -HostName 'local-site'
 
@@ -77,52 +95,80 @@ Describe "New-IISWebsite" {
         $site.Applications["/"].ApplicationPoolName | Should -Be 'local-site-AppPool'
     }
 
-    It "Pipeline property binding" -Skip {
+    It "-AppPoolName" {
+        RegisterAppPoolCleanup 'MyAppPool'
+
+        # when
+        New-CaccaIISWebsite $testSiteName -AppPoolName 'MyAppPool'
+
+        # then
+        [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
+        $site | Should -Not -BeNullOrEmpty
+        $site.Applications["/"].ApplicationPoolName | Should -Be 'MyAppPool'
+    }
+
+    It "-AppPoolConfig" {
         # given
-        $siteParams = @{
-            SiteName = $testSiteName
-            Path     = $tempSitePath
-            Port = 80
-            Protocol = 'http'
-            HostName = 'local-site'
-            SiteConfig = {}
-            ModifyPaths = @()
-            ExecutePaths = @()
-            SiteShellOnly = $true
+        [Microsoft.Web.Administration.ApplicationPool]$pool = $null
+        $appPoolConfig = {
+            $pool = $_
+            $_.ManagedRuntimeVersion = 'v2.0'
         }
 
         # when
-        New-CaccaIISWebsite $testSiteName -HostName 'local-site'
+        New-CaccaIISWebsite $testSiteName -AppPoolConfig $appPoolConfig
 
         # then
-        [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
-        $site | Should -Not -BeNullOrEmpty
-        $site.Bindings[0].Host | Should -Be 'local-site'
-        $site.Applications["/"].ApplicationPoolName | Should -Be 'local-site-AppPool'
+        $pool | Should -Not -BeNullOrEmpty
+        (Get-IISAppPool $testAppPoolName).ManagedRuntimeVersion | Should -Be 'v2.0'
     }
 
-    It '-Commit:$false, transation rolled back' {
+    It "-SiteShellOnly" {
         # when
-        Start-IISCommitDelay
-        New-CaccaIISWebsite $testSiteName $tempSitePath -Commit:$false
-        Stop-IISCommitDelay -Commit:$false
+        New-CaccaIISWebsite $testSiteName -SiteShellOnly
 
         # then
-        Reset-IISServerManager -Confirm:$false
-        Get-IISSite $testSiteName | Should -Be $null
-        # note that file permissions were NOT rolled back (is this a problem?)
-        $identities = (Get-Acl $tempSitePath).Access.IdentityReference
-        $identities | ? Value -eq 'IIS AppPool\DeleteMeSite-AppPool' | Should -Not -BeNullOrEmpty  
+        Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
+        # todo: verify that Set-CaccaIISSiteAcl called with -SiteShellOnly
     }
 
-    It '-Commit:$false, transation committed' {
+    It "Site returned by -PassThru should be modifiable" {
+        # given
+        $otherPath = "TestDrive:\SomeFolder"
+        New-Item $otherPath -ItemType Directory
+
         # when
+        [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName -PassThru
+
         Start-IISCommitDelay
-        New-CaccaIISWebsite $testSiteName -Commit:$false
+        $site.Applications['/'].VirtualDirectories['/'].PhysicalPath = $otherPath
         Stop-IISCommitDelay
 
         # then
-        Reset-IISServerManager -Confirm:$false
-        Get-IISSite $testSiteName | Should -Not -Be $null
+        (Get-IISSite $testSiteName).Applications.VirtualDirectories.PhysicalPath | Should -Be $otherPath
+    }
+
+    It "Pipeline property binding" {
+        RegisterAppPoolCleanup 'MyApp3'
+
+        # given
+        $siteParams = @{
+            SiteName      = $testSiteName
+            Path          = $tempSitePath
+            Port          = 80
+            Protocol      = 'http'
+            HostName      = 'local-site'
+            SiteConfig    = {}
+            ModifyPaths   = @()
+            ExecutePaths  = @()
+            SiteShellOnly = $true
+            AppPoolName   = 'MyApp3'
+        }
+
+        # when
+        New-CaccaIISWebsite @siteParams
+
+        # then
+        Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
     }
 }

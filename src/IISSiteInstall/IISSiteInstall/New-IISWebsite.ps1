@@ -39,9 +39,7 @@ function New-IISWebsite {
 
         [switch] $Force,
 
-        [switch] $PassThru,
-        
-        [switch] $Commit
+        [switch] $PassThru
     )
     
     begin {
@@ -79,15 +77,12 @@ function New-IISWebsite {
             $Commit = $true
         }
         $isErrored = $false
-
-        $ServerManager = Get-IISServerManager
-        if ($Commit) {
-            Start-IISCommitDelay
-        }
     }
     
     process {
         try {
+            
+            $ServerManager = Get-IISServerManager
             
             $existingSite = $ServerManager.Sites[$SiteName];
             if ($existingSite -ne $null -and !$Force) {
@@ -98,37 +93,48 @@ function New-IISWebsite {
                 if ($PSCmdlet.ShouldProcess($Path, 'Createing Website physical path')) {
                     New-Item $Path -ItemType Directory -WhatIf:$false | Out-Null
                 }
-            }            
-
-            if ($existingSite -ne $null) {
-                if ($PSCmdlet.ShouldProcess($SiteName, 'Deleting existing Website')) {
-                    $ServerManager.Sites.Remove($existingSite)
-                }
-            }
-            $existingPool = $ServerManager.ApplicationPools[$AppPoolName];
-            if ($existingPool -ne $null) {
-                if ($PSCmdlet.ShouldProcess($AppPoolName, 'Deleting existing App pool')) {
-                    $ServerManager.ApplicationPools.Remove($existingPool)
-                }
             }
 
-            if ($PSCmdlet.ShouldProcess($AppPoolName, 'Creating App pool')) {
-                $pool = $ServerManager.ApplicationPools.Add($AppPoolName)
-                $pool.ManagedPipelineMode = "Integrated"
-                $pool.ManagedRuntimeVersion = "v4.0"
-                $pool.Enable32BitAppOnWin64 = $true # this IS the recommended default even for 64bit servers
-                $pool.AutoStart = $true
-                $pool | ForEach-Object $AppPoolConfig
-            }
+            Start-IISCommitDelay
 
-            if ($PSCmdlet.ShouldProcess($SiteName, 'Creating Website')) {
-                $site = New-IISSite $SiteName $Path -BindingInformation "*:$($Port):$($HostName)" $Protocol -Passthru
-                $site.Applications["/"].ApplicationPoolName = $AppPoolName
-                $site | ForEach-Object $SiteConfig
+            try {
 
-                if ($PassThru) {
-                    $site
+                if ($existingSite -ne $null) {
+                    if ($PSCmdlet.ShouldProcess($SiteName, 'Deleting existing Website')) {
+                        $ServerManager.Sites.Remove($existingSite)
+                    }
                 }
+                $existingPool = $ServerManager.ApplicationPools[$AppPoolName];
+                if ($existingPool -ne $null) {
+                    if ($PSCmdlet.ShouldProcess($AppPoolName, 'Deleting existing App pool')) {
+                        $ServerManager.ApplicationPools.Remove($existingPool)
+                    }
+                }
+    
+                if ($PSCmdlet.ShouldProcess($AppPoolName, 'Creating App pool')) {
+                    [Microsoft.Web.Administration.ApplicationPool] $pool = $ServerManager.ApplicationPools.Add($AppPoolName)
+                    $pool.ManagedPipelineMode = "Integrated"
+                    $pool.ManagedRuntimeVersion = "v4.0"
+                    $pool.Enable32BitAppOnWin64 = $true # this IS the recommended default even for 64bit servers
+                    $pool.AutoStart = $true
+                    $pool | ForEach-Object $AppPoolConfig
+                }
+    
+                if ($PSCmdlet.ShouldProcess($SiteName, 'Creating Website')) {
+                    $bindingInfo = "*:$($Port):$($HostName)"
+                    [Microsoft.Web.Administration.Site] $site = New-IISSite $SiteName $Path $bindingInfo $Protocol -Passthru
+                    $site.Applications["/"].ApplicationPoolName = $AppPoolName
+                    $site | ForEach-Object $SiteConfig
+                }
+    
+                Stop-IISCommitDelay                   
+            }
+            catch {
+                Stop-IISCommitDelay -Commit:$false
+                throw
+            }
+            finally {
+                Reset-IISServerManager -Confirm:$false
             }
 
             $siteAclParams = @{
@@ -140,17 +146,13 @@ function New-IISWebsite {
             }
             # note: we should NOT have to explicitly 'pass' preference (bug in PS?)
             Set-CaccaIISSiteAcl @siteAclParams -WhatIf:$WhatIfPreference
-            
+
+            if ($PassThru -and $WhatIfPreference -eq $false) {
+                Get-IISSite $SiteName   
+            }
         }
         catch {
-            $isErrored = $true
             Write-Error -ErrorRecord $_ -EA $callerEA
-        }
-    }
-
-    end {
-        if ($Commit) {
-            Stop-IISCommitDelay -Commit:(!$isErrored)
         }
     }
 }
