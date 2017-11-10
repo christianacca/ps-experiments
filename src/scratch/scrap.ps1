@@ -1,6 +1,4 @@
-Set-Location C:\Git\ps-experiments\
+Get-Module IISSiteInstall -All | Remove-Module
+Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
-. .\src\IISSecurity\IISSecurity\Get-IISSiteDesiredAcl.ps1
-
-Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -EA Stop
-
+New-CaccaIISWebsite -SiteName Series10 -Path "Env:\TEMP" -WhatIf

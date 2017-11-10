@@ -85,6 +85,7 @@ function Set-IISSiteAcl {
         Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+        Write-Host "Set-IISSiteAcl:WhatIfPreference $WhatIfPreference"
     }
     
     process {

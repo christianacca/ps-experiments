@@ -1,15 +1,15 @@
 #Requires -RunAsAdministrator
-Set-StrictMode -Version 'Latest'
+#Requires -Modules IISAdministration
 
 function New-IISWebApp {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param (
-        
     )
     
     begin {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+        Set-StrictMode -Version 'Latest'
     }
     
     process {
@@ -19,5 +19,8 @@ function New-IISWebApp {
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
+    }
+
+    end {
     }
 }
