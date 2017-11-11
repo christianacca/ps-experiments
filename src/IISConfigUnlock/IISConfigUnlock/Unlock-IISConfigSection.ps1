@@ -3,37 +3,47 @@
 function Unlock-IISConfigSection {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, ParameterSetName='Path')]
+        [Parameter(Mandatory, ParameterSetName='Path', ValueFromPipeline)]
+        [ValidateNotNullOrEmpty()]
         [string] $SectionPath,
-        [Parameter(Mandatory, ParameterSetName='Config')]
-        [Microsoft.Web.Administration.Configuration] $Section,
+
+        [Parameter(Mandatory, ParameterSetName='Config', ValueFromPipeline)]
+        [ValidateNotNullOrEmpty()]
+        [Microsoft.Web.Administration.ConfigurationSection] $Section,
+
         [string] $Location,
-        [Microsoft.Web.Administration.ServerManager] $ServerManager
+
+        [switch] $Commit
     )
     
     begin {
         Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+
+        if (!$PSBoundParameters.ContainsKey('Commit')) {
+            $Commit = $true
+        }
     }
     
     process {
         try {
 
-            if (-not $ServerManager) {
-                $ServerManager = Get-IISServerManager
+            if ($Commit) {
+                Start-IISCommitDelay
             }
 
-            $sectionConfig = if ($Section.IsPresent) { 
+            $sectionConfig = if ($Section) { 
                 $Section
             }
             else {
                 Get-IISConfigSection $SectionPath -Location $Location
             }
+
             $sectionConfig.OverrideMode = 'Allow'
             
-            if (-not $PSBoundParameters.ContainsKey('ServerManager')) {
-                $ServerManager.CommitChanges()
+            if ($Commit) {
+                Stop-IISCommitDelay
             }
             
         }

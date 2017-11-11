@@ -5,20 +5,24 @@ function Unlock-IISWindowsAuth {
     param (
         [string] $Location,
         [switch] $Minimum,
-        [Microsoft.Web.Administration.ServerManager] $ServerManager
+        [switch] $Commit
     )
     
     begin {
         Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+
+        if (!$PSBoundParameters.ContainsKey('Commit')) {
+            $Commit = $true
+        }
     }
     
     process {
         try {
 
-            if (-not $ServerManager) {
-                $ServerManager = Get-IISServerManager
+            if ($Commit) {
+                Start-IISCommitDelay
             }
 
             $winAuthConfig = Get-IISConfigSection `
@@ -31,8 +35,8 @@ function Unlock-IISWindowsAuth {
                 $winAuthConfig.SetMetadata('lockAllElementsExcept', 'extendedProtection')
             }
 
-            if (-not $PSBoundParameters.ContainsKey('ServerManager')) {
-                $ServerManager.CommitChanges()
+            if ($Commit) {
+                Stop-IISCommitDelay
             }
             
         }

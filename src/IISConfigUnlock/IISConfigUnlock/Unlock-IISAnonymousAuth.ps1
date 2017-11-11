@@ -4,22 +4,23 @@ function Unlock-IISAnonymousAuth {
     [CmdletBinding()]
     param (
         [string] $Location,
-        [Microsoft.Web.Administration.ServerManager] $ServerManager
+        [switch] $Commit
     )
     
     begin {
         Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+
+        if (!$PSBoundParameters.ContainsKey('Commit')) {
+            $Commit = $true
+        }
     }
     
     process {
         try {
-
-            Unlock-IISConfigSection `
-                -SectionPath 'system.webServer/security/authentication/anonymousAuthentication' `
-                -Location $Location `
-                -ServerManager $ServerManager         
+            $sectionPath = 'system.webServer/security/authentication/anonymousAuthentication'
+            $sectionPath | Unlock-IISConfigSection -Location $Location -Commit:$Commit
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

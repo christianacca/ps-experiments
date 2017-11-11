@@ -65,8 +65,8 @@ Set-CaccaIISSiteAcl @siteShellAclParams
 # Create SPA child application
 $spaApp = $site.Applications.Add("/$spaAppName", $spaAppPath)
 $spaApp.ApplicationPoolName = $mainAppPoolName
-Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName" -ServerManager $manager
-Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServerVariables' -Location "$SiteName/$spaAppName" -ServerManager $manager
+Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName" -Commit:$false
+Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServerVariables' -Location "$SiteName/$spaAppName" -Commit:$false
 
 $spaAclParams = @{
     AppPath      = $spaAppPath
@@ -80,8 +80,8 @@ Set-CaccaIISSiteAcl @spaAclParams
 # Create WinLogin child app
 $winLoginApp = $site.Applications.Add("/$winLoginAppName", $winLoginAppPath)
 $winLoginApp.ApplicationPoolName = $mainAppPoolName
-Unlock-CaccaIISWindowsAuth -Location "$SiteName/$winLoginAppName" -Minimum -ServerManager $manager
-Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$winLoginAppName" -ServerManager $manager
+Unlock-CaccaIISWindowsAuth -Location "$SiteName/$winLoginAppName" -Minimum -Commit:$false
+Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$winLoginAppName" -Commit:$false
 
 $winLoginAclParams = @{
     AppPath     = $winLoginAppPath
