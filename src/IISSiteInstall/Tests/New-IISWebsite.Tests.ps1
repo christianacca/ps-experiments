@@ -10,30 +10,16 @@ $sitePath = "C:\inetpub\sites\$testSiteName"
 $tempSitePath = "$Env:TEMP\$testSiteName"
 $appPoolNames = [System.Collections.ArrayList]::new()
 
-function Cleanup {
-    Start-IISCommitDelay
-    Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
-    $manager = Get-IISServerManager
-    foreach ($poolName in $script:appPoolNames) {
-        $pool = $manager.ApplicationPools[$poolName]
-        if ($pool) {
-            $manager.ApplicationPools.Remove($pool) 
-        }
-    }
-    Stop-IISCommitDelay
-    Reset-IISServerManager -Confirm:$false
-    Remove-Item $tempSitePath -Recurse -Confirm:$false -EA Ignore
-    Remove-Item $sitePath -Recurse -Confirm:$false -EA Ignore
-}
-
-function RegisterAppPoolCleanup ([string] $Name) {
-    $script:appPoolNames.Add($Name)
-}
-
 Describe 'New-IISWebsite' {
+
+    function Cleanup {
+        Reset-IISServerManager -Confirm:$false
+        Remove-CaccaIISWebsite $testSiteName -Confirm:$false -WA SilentlyContinue
+        Remove-Item $tempSitePath -Recurse -Confirm:$false -EA Ignore
+        Remove-Item $sitePath -Recurse -Confirm:$false -EA Ignore
+    }
+
     BeforeEach {
-        $Script:appPoolNames.Clear()
-        RegisterAppPoolCleanup $testAppPoolName
         Cleanup
     }
 
@@ -93,8 +79,6 @@ Describe 'New-IISWebsite' {
     }
 
     It "-AppPoolName" {
-        RegisterAppPoolCleanup 'MyAppPool'
-
         # when
         New-CaccaIISWebsite $testSiteName -AppPoolName 'MyAppPool'
 
@@ -146,8 +130,6 @@ Describe 'New-IISWebsite' {
     }
 
     It "Pipeline property binding" {
-        RegisterAppPoolCleanup 'MyApp3'
-
         # given
         $siteParams = @{
             Name          = $testSiteName

@@ -43,20 +43,11 @@ Describe 'Remove-IISAppPool' {
         
         function Cleanup {
             Reset-IISServerManager -Confirm:$false
-            Start-IISCommitDelay
-            $manager = Get-IISServerManager
-            Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
-            $pool = $manager.ApplicationPools[$tempAppPool]
-            if ($pool) {
-                $manager.ApplicationPools.Remove($pool)
-            }
-            Stop-IISCommitDelay
-            Reset-IISServerManager -Confirm:$false
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false -WA SilentlyContinue
         }
 
         BeforeEach {
-            Cleanup
-            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $tempAppPool
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $tempAppPool -Force
         }
 
         AfterEach {
