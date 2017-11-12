@@ -16,8 +16,8 @@ Describe 'Remove-IISWebsite' {
     function Cleanup {
         Reset-IISServerManager -Confirm:$false
         Start-IISCommitDelay
-        Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA 'Ignore'
-        Remove-IISSite $test2SiteName -EA Ignore -Confirm:$false -WA 'Ignore'
+        Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
+        Remove-IISSite $test2SiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
         @($tempAppPool, $temp2AppPool, $childAppPool) | Remove-CaccaIISAppPool -Commit:$false -Force -EA Ignore
         Stop-IISCommitDelay
         Reset-IISServerManager -Confirm:$false
@@ -36,8 +36,8 @@ Describe 'Remove-IISWebsite' {
 
             # then
             Reset-IISServerManager -Confirm:$false
-            Get-IISSite $testSiteName -WA Ignore | Should -BeNullOrEmpty
-            Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
+            Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
         }
 
         It '-WhatIf should make no modifications' {
@@ -77,9 +77,9 @@ Describe 'Remove-IISWebsite' {
             Remove-CaccaIISWebsite $testSiteName
             
             # then
-            Get-IISSite $testSiteName -WA Ignore | Should -BeNullOrEmpty
-            Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
-            Get-IISAppPool $childAppPool -WA Ignore | Should -BeNullOrEmpty
+            Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $childAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
         }
     }
 
@@ -106,8 +106,8 @@ Describe 'Remove-IISWebsite' {
             Remove-CaccaIISWebsite $testSiteName
                     
             # then
-            Get-IISSite $testSiteName -WA Ignore | Should -BeNullOrEmpty
-            Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
+            Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
             Get-IISAppPool $temp2AppPool | Should -Not -BeNullOrEmpty
         }
     }

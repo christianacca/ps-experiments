@@ -45,7 +45,6 @@ function New-IISAppPool {
             if ($Commit) {
                 Start-IISCommitDelay
             }
-
             try {
                 if ($existingPool) {
                     if ($PSCmdlet.ShouldProcess($Name, 'Removing existing App pool')) {

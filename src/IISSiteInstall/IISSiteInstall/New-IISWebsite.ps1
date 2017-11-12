@@ -72,7 +72,7 @@ function New-IISWebsite {
     process {
         try {
             
-            $existingSite = Get-IISSite $Name -WA Ignore;
+            $existingSite = Get-IISSite $Name -WA SilentlyContinue;
             if ($existingSite -ne $null -and !$Force) {
                 throw "Site already exists. To overwrite you must supply -Force"
             }

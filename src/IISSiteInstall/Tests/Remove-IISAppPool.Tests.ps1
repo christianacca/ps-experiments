@@ -27,7 +27,7 @@ Describe 'Remove-IISAppPool' {
             Remove-CaccaIISAppPool $tempAppPool -Commit:$false
 
             # then
-            Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
+            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
         }
 
         It '-WhatIf should make no modifications' {
@@ -45,7 +45,7 @@ Describe 'Remove-IISAppPool' {
             Reset-IISServerManager -Confirm:$false
             Start-IISCommitDelay
             $manager = Get-IISServerManager
-            Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA 'Ignore'
+            Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
             $pool = $manager.ApplicationPools[$tempAppPool]
             if ($pool) {
                 $manager.ApplicationPools.Remove($pool)
@@ -70,7 +70,7 @@ Describe 'Remove-IISAppPool' {
     
         It '-Force should allow delete' {
             Remove-CaccaIISAppPool $tempAppPool -Force
-            Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
+            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
         }
     }
 }
