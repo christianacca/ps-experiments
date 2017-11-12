@@ -96,7 +96,7 @@ function New-IISWebsite {
                     Remove-IISWebsite $Name -Commit:$false
                 }
     
-                New-IISAppPool $AppPoolName $AppPoolConfig -Commit:$false
+                New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false
     
                 if ($PSCmdlet.ShouldProcess($Name, 'Creating Website')) {
                     $bindingInfo = "*:$($Port):$($HostName)"

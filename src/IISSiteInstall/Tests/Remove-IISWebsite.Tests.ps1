@@ -83,7 +83,7 @@ Describe 'Remove-IISWebsite' {
         
         BeforeAll {
             Cleanup
-            New-CaccaIISWebsite $test2SiteName (Join-Path $TestDrive 'Site2') -Port 3564
+            New-CaccaIISWebsite $test2SiteName (Join-Path $TestDrive 'Site2') -Force -Port 3564
 
             [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $temp2AppPool -Force -PassThru
             Start-IISCommitDelay
