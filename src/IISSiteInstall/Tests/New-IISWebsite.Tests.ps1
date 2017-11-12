@@ -83,8 +83,6 @@ Describe 'New-IISWebsite' {
     }
 
     It "-HostName" {
-        RegisterAppPoolCleanup 'local-site-AppPool'
-
         # when
         New-CaccaIISWebsite $testSiteName -HostName 'local-site'
 
@@ -92,7 +90,6 @@ Describe 'New-IISWebsite' {
         [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
         $site | Should -Not -BeNullOrEmpty
         $site.Bindings[0].Host | Should -Be 'local-site'
-        $site.Applications["/"].ApplicationPoolName | Should -Be 'local-site-AppPool'
     }
 
     It "-AppPoolName" {

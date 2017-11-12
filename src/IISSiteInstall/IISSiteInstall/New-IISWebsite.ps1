@@ -62,13 +62,7 @@ function New-IISWebsite {
             $ExecutePaths = @()
         }
         if ([string]::IsNullOrWhiteSpace($AppPoolName)) {
-            $preferredName = if (![string]::IsNullOrWhiteSpace($HostName)) {
-                $HostName
-            }
-            else {
-                $SiteName
-            }
-            $AppPoolName = "$preferredName-AppPool"
+            $AppPoolName = "$SiteName-AppPool"
         }
         if ($AppPoolConfig -eq $null) {
             $AppPoolConfig = {}
@@ -76,15 +70,14 @@ function New-IISWebsite {
         if (!$PSBoundParameters.ContainsKey('Commit')) {
             $Commit = $true
         }
-        $isErrored = $false
     }
     
     process {
         try {
             
-            $ServerManager = Get-IISServerManager
+            [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
             
-            $existingSite = $ServerManager.Sites[$SiteName];
+            $existingSite = $manager.Sites[$SiteName];
             if ($existingSite -ne $null -and !$Force) {
                 throw "Site already exists. To overwrite you must supply -Force"
             }
@@ -95,30 +88,25 @@ function New-IISWebsite {
                 }
             }
 
-            Start-IISCommitDelay
+            if ($Commit) {
+                Start-IISCommitDelay
+            }
 
             try {
 
                 if ($existingSite -ne $null) {
                     if ($PSCmdlet.ShouldProcess($SiteName, 'Deleting existing Website')) {
-                        $ServerManager.Sites.Remove($existingSite)
+                        $manager.Sites.Remove($existingSite)
                     }
                 }
-                $existingPool = $ServerManager.ApplicationPools[$AppPoolName];
+                $existingPool = $manager.ApplicationPools[$AppPoolName];
                 if ($existingPool -ne $null) {
                     if ($PSCmdlet.ShouldProcess($AppPoolName, 'Deleting existing App pool')) {
-                        $ServerManager.ApplicationPools.Remove($existingPool)
+                        $manager.ApplicationPools.Remove($existingPool)
                     }
                 }
     
-                if ($PSCmdlet.ShouldProcess($AppPoolName, 'Creating App pool')) {
-                    [Microsoft.Web.Administration.ApplicationPool] $pool = $ServerManager.ApplicationPools.Add($AppPoolName)
-                    $pool.ManagedPipelineMode = "Integrated"
-                    $pool.ManagedRuntimeVersion = "v4.0"
-                    $pool.Enable32BitAppOnWin64 = $true # this IS the recommended default even for 64bit servers
-                    $pool.AutoStart = $true
-                    $pool | ForEach-Object $AppPoolConfig
-                }
+                New-IISAppPool $AppPoolName $AppPoolConfig -Commit:$false
     
                 if ($PSCmdlet.ShouldProcess($SiteName, 'Creating Website')) {
                     $bindingInfo = "*:$($Port):$($HostName)"
@@ -127,10 +115,14 @@ function New-IISWebsite {
                     $site | ForEach-Object $SiteConfig
                 }
     
-                Stop-IISCommitDelay                   
+                if ($Commit) {
+                    Stop-IISCommitDelay
+                }
             }
             catch {
-                Stop-IISCommitDelay -Commit:$false
+                if ($Commit) {
+                    Stop-IISCommitDelay -Commit:$false
+                }
                 throw
             }
             finally {

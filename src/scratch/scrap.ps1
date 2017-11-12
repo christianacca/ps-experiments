@@ -1,5 +1,9 @@
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
-New-CaccaIISWebsite -SiteName Series10 -Path "$Env:TEMP\Series11" -Commit:$false
-Get-IISSite Series10
+Get-CaccaIISSiteHierarchyInfo
+
+# New-CaccaIISWebsite FakeSite C:\inetpub\sites\FakeSite -AppPoolName 'Series5-AppPool' -Force
+
+# Remove-CaccaIISWebsite Series5
+# Reset-IISServerManager -Confirm:$false

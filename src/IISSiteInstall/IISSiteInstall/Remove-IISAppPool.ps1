@@ -1,11 +1,13 @@
 #Requires -RunAsAdministrator
 
-function Remove-IISWebsite {
+function Remove-IISAppPool {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
-        [string] $SiteName,
+        [string] $Name,
+
+        [switch] $Force,
 
         [switch] $Commit
     )
@@ -18,22 +20,38 @@ function Remove-IISWebsite {
         if (!$PSBoundParameters.ContainsKey('Commit')) {
             $Commit = $true
         }
+
+        $existingSiteInfo = if ($Force) {
+            @()
+        } else {
+            Get-IISSiteHierarchyInfo
+        }
     }
     
     process {
         try {
-            $siteInfo = Get-IISSiteHierarchyInfo $SiteName
+            
             [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
 
             if ($Commit) {
                 Start-IISCommitDelay
             }
             try {
-                Remove-IISSite $SiteName -Confirm:$false
-                $siteInfo | Select-Object -Exp AppPool_Name -Unique | Remove-IISAppPool -EA Ignore -Commit:$false          
+                $pool = $manager.ApplicationPools[$Name]
+                
+                if (!$pool) {
+                    throw "Cannot delete AppPool, '$Name' does not exist"
+                }
+                $inUse = $existingSiteInfo | Where-Object AppPool_Name -eq $Name
+                if ($inUse) {
+                    throw "Cannot delete AppPool, '$Name' is used by one or more Web applications/sites"
+                }
+
+                $manager.ApplicationPools.Remove($pool)     
+                
                 if ($Commit) {
                     Stop-IISCommitDelay
-                }      
+                }
             }
             catch {
                 if ($Commit) {
