@@ -40,6 +40,8 @@ function Remove-IISWebsite {
                 Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
+            # todo: remove AppPoolIdentity user from folder/file ACL's
+
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

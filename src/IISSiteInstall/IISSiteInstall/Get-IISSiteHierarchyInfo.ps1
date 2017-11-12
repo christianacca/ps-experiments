@@ -34,7 +34,7 @@ function Get-IISSiteHierarchyInfo {
             @{n = 'App_PhysicalPath'; e = {$app.VirtualDirectories[0].PhysicalPath}}, 
             @{n = 'AppPool_Name'; e = {$app.ApplicationPoolName}},
             @{n = 'AppPool_IdentityType'; e = {$pool.ProcessModel.IdentityType}},
-            @{n = 'AppPool_Username'; e = {$pool.ProcessModel.UserName}}
+            @{n = 'AppPool_Username'; e = {Get-IISAppPoolUsername $pool}}
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

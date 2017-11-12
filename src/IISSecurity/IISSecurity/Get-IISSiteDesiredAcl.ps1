@@ -156,8 +156,7 @@ function Get-IISSiteDesiredAcl {
                 Add $permissions (ToIcaclsPermission $_ '(RX)' 'read+execute permission')
             }
             if (!$SkipTempAspNetFiles) {
-                $aspNetTempFolder = 'C:\Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files'
-                Get-ChildItem $aspNetTempFolder | Select-Object -Exp FullName | ForEach-Object {
+                Get-TempAspNetFilesPaths | ForEach-Object {
                     Add $permissions (ToIcaclsPermission $_ '(OI)(CI)R' 'read permission (inherit)')
                 }
             }

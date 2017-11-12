@@ -35,13 +35,15 @@ Describe 'Get-IISSiteHierarchyInfo' {
 
             # then
             $pool = Get-IISAppPool $tempAppPool
+            Write-Host ($pool.ProcessModel.IdentityType)
+
             $expected = [PsCustomObject]@{
                 Site_Name            = $testSiteName
                 App_Path             = '/'
                 App_PhysicalPath     = $TestDrive
                 AppPool_Name         = $tempAppPool
                 AppPool_IdentityType = $pool.ProcessModel.IdentityType
-                AppPool_Username     = $pool.ProcessModel.UserName
+                AppPool_Username     = "IIS AppPool\$tempAppPool"
             }
             ($info | Measure-Object).Count | Should -Be 1
             Compare-ObjectProperties $info $expected | Should -Be $null
@@ -99,7 +101,7 @@ Describe 'Get-IISSiteHierarchyInfo' {
                     App_PhysicalPath     = $TestDrive
                     AppPool_Name         = $tempAppPool
                     AppPool_IdentityType = $pool.ProcessModel.IdentityType
-                    AppPool_Username     = $pool.ProcessModel.UserName
+                    AppPool_Username     = "IIS AppPool\$tempAppPool"
                 },
                 [PsCustomObject]@{
                     Site_Name            = $testSiteName
@@ -107,7 +109,7 @@ Describe 'Get-IISSiteHierarchyInfo' {
                     App_PhysicalPath     = (Join-Path $TestDrive 'MyApp1')
                     AppPool_Name         = $tempAppPool
                     AppPool_IdentityType = $pool.ProcessModel.IdentityType
-                    AppPool_Username     = $pool.ProcessModel.UserName
+                    AppPool_Username     = "IIS AppPool\$tempAppPool"
                 }
             )
             ($info | Measure-Object).Count | Should -Be 2
