@@ -33,7 +33,7 @@ Describe 'Unlock-IISWindowsAuth' {
         }
 
         function Cleanup {
-            Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WarningAction 'Ignore'
+            Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
             Reset-IISServerManager -Confirm:$false
             Remove-Item $tempSitePath -Recurse -Confirm:$false -EA Ignore
         }

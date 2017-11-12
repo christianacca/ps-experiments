@@ -16,8 +16,8 @@ Describe 'Get-IISSiteHierarchyInfo' {
     function Cleanup {
         Reset-IISServerManager -Confirm:$false
         Start-IISCommitDelay
-        Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WarningAction 'Ignore'
-        Remove-IISSite $test2SiteName -EA Ignore -Confirm:$false -WarningAction 'Ignore'
+        Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
+        Remove-IISSite $test2SiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
         $manager = Get-IISServerManager
         $info = $manager.ApplicationPools[$tempAppPool]
         if ($info) {

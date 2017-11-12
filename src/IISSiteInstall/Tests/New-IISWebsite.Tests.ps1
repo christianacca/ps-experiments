@@ -12,7 +12,7 @@ $appPoolNames = [System.Collections.ArrayList]::new()
 
 function Cleanup {
     Start-IISCommitDelay
-    Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WarningAction 'Ignore'
+    Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
     $manager = Get-IISServerManager
     foreach ($poolName in $script:appPoolNames) {
         $pool = $manager.ApplicationPools[$poolName]
