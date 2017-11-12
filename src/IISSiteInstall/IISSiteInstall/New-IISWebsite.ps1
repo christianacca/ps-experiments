@@ -77,10 +77,9 @@ function New-IISWebsite {
                 throw "Site already exists. To overwrite you must supply -Force"
             }
 
-            if (-not(Test-Path $Path)) {
-                if ($PSCmdlet.ShouldProcess($Path, 'Createing Website physical path')) {
-                    New-Item $Path -ItemType Directory -WhatIf:$false | Out-Null
-                }
+            $sitePathExists = Test-Path $Path
+            if (!$sitePathExists -and $PSCmdlet.ShouldProcess($Path, 'Creating Website physical path')) {
+                New-Item $Path -ItemType Directory -WhatIf:$false | Out-Null
             }
 
             if ($existingSite -ne $null) {
@@ -110,15 +109,20 @@ function New-IISWebsite {
                 Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
-            $siteAclParams = @{
-                SitePath      = $Path
-                AppPoolName   = $AppPoolName
-                ModifyPaths   = $ModifyPaths
-                ExecutePaths  = $ExecutePaths
-                SiteShellOnly = $SiteShellOnly
+            if ($WhatIfPreference -eq $true -and !$sitePathExists) {
+                # Set-CaccaIISSiteAcl requires path to exist
             }
-            # note: we should NOT have to explicitly 'pass' preference (bug in PS?)
-            Set-CaccaIISSiteAcl @siteAclParams -WhatIf:$WhatIfPreference
+            else {
+                $siteAclParams = @{
+                    SitePath      = $Path
+                    AppPoolName   = $AppPoolName
+                    ModifyPaths   = $ModifyPaths
+                    ExecutePaths  = $ExecutePaths
+                    SiteShellOnly = $SiteShellOnly
+                }
+                # note: we should NOT have to explicitly 'pass' preference (bug in PS?)
+                Set-CaccaIISSiteAcl @siteAclParams -WhatIf:$WhatIfPreference
+            }
 
             if ($PassThru -and $WhatIfPreference -eq $false) {
                 Get-IISSite $Name

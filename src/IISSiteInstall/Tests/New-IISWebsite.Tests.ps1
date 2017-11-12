@@ -150,4 +150,27 @@ Describe 'New-IISWebsite' {
         # then
         Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
     }
+
+    It "-WhatIf should not modify anything" {
+        # when
+        New-CaccaIISWebsite $testSiteName $tempSitePath -AppPoolName 'MyAppPool' -WhatIf
+
+        # then
+        Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
+        Get-IISAppPool 'MyAppPool' -WA SilentlyContinue | Should -BeNullOrEmpty
+        Test-Path $tempSitePath | Should -Be $false
+    }
+
+    It "-WhatIf should not modify anything (site path exists)" {
+        # given
+        New-Item $sitePath -ItemType Directory -EA Ignore
+
+        # when
+        New-CaccaIISWebsite $testSiteName $sitePath -AppPoolName 'MyAppPool' -WhatIf
+
+        # then
+        Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
+        Get-IISAppPool 'MyAppPool' -WA SilentlyContinue | Should -BeNullOrEmpty
+        Test-Path $tempSitePath | Should -Be $false
+    }
 }
