@@ -25,7 +25,7 @@ Describe 'Remove-IISWebsite' {
 
     Context "Site only" {
 
-        BeforeAll {
+        BeforeEach {
             Cleanup
             New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $tempAppPool
         }
@@ -38,6 +38,20 @@ Describe 'Remove-IISWebsite' {
             Get-IISSite $testSiteName -WA Ignore | Should -BeNullOrEmpty
             Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
         }
+
+        It '-WhatIf should make no modifications' {
+            # when
+            Remove-CaccaIISWebsite $testSiteName -WhatIf
+
+            # then
+            Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
+            Get-IISAppPool $tempAppPool | Should -Not -BeNullOrEmpty
+        }
+
+        It 'ServerManager should be reset after delete' {
+
+        }
+
     }
 
     Context "Site and child app" {

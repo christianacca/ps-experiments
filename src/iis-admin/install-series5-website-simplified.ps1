@@ -30,7 +30,7 @@ $winLoginAppName = 'WinLogin'
 
 # Create top level website
 $siteParams = @{
-    SiteName      = $SiteName
+    Name      = $SiteName
     Path          = $SitePhysicalPath
     HostName      = $spaHostName
     SiteShellOnly = $true

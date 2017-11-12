@@ -5,7 +5,7 @@ function Get-IISSiteHierarchyInfo {
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipeline)]
-        [string] $SiteName
+        [string] $Name
     )
     
     begin {
@@ -16,12 +16,12 @@ function Get-IISSiteHierarchyInfo {
     
     process {
         try {
-            $siteParams = if ([string]::IsNullOrWhiteSpace($SiteName)) {
+            $siteParams = if ([string]::IsNullOrWhiteSpace($Name)) {
                 @{}
             }
             else {
                 @{
-                    Name = $SiteName
+                    Name = $Name
                 }
             }
 

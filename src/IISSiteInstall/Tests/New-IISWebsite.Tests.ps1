@@ -150,7 +150,7 @@ Describe 'New-IISWebsite' {
 
         # given
         $siteParams = @{
-            SiteName      = $testSiteName
+            Name          = $testSiteName
             Path          = $tempSitePath
             Port          = 80
             Protocol      = 'http'

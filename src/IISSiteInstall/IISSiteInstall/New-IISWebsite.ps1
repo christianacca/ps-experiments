@@ -6,7 +6,7 @@ function New-IISWebsite {
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [string] $SiteName,
+        [string] $Name,
 
         [Parameter(ValueFromPipelineByPropertyName)]
         [string] $Path,
@@ -50,7 +50,7 @@ function New-IISWebsite {
         Import-Module IISSecurity -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'        
 
         if ([string]::IsNullOrWhiteSpace($Path)) {
-            $Path = "C:\inetpub\sites\$SiteName"
+            $Path = "C:\inetpub\sites\$Name"
         }
         if ($SiteConfig -eq $null) {
             $SiteConfig = {}
@@ -62,7 +62,7 @@ function New-IISWebsite {
             $ExecutePaths = @()
         }
         if ([string]::IsNullOrWhiteSpace($AppPoolName)) {
-            $AppPoolName = "$SiteName-AppPool"
+            $AppPoolName = "$Name-AppPool"
         }
         if ($AppPoolConfig -eq $null) {
             $AppPoolConfig = {}
@@ -75,9 +75,7 @@ function New-IISWebsite {
     process {
         try {
             
-            [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
-            
-            $existingSite = $manager.Sites[$SiteName];
+            $existingSite = Get-IISSite $Name;
             if ($existingSite -ne $null -and !$Force) {
                 throw "Site already exists. To overwrite you must supply -Force"
             }
@@ -95,22 +93,14 @@ function New-IISWebsite {
             try {
 
                 if ($existingSite -ne $null) {
-                    if ($PSCmdlet.ShouldProcess($SiteName, 'Deleting existing Website')) {
-                        $manager.Sites.Remove($existingSite)
-                    }
-                }
-                $existingPool = $manager.ApplicationPools[$AppPoolName];
-                if ($existingPool -ne $null) {
-                    if ($PSCmdlet.ShouldProcess($AppPoolName, 'Deleting existing App pool')) {
-                        $manager.ApplicationPools.Remove($existingPool)
-                    }
+                    Remove-IISWebsite $Name -Commit:$false
                 }
     
                 New-IISAppPool $AppPoolName $AppPoolConfig -Commit:$false
     
-                if ($PSCmdlet.ShouldProcess($SiteName, 'Creating Website')) {
+                if ($PSCmdlet.ShouldProcess($Name, 'Creating Website')) {
                     $bindingInfo = "*:$($Port):$($HostName)"
-                    [Microsoft.Web.Administration.Site] $site = New-IISSite $SiteName $Path $bindingInfo $Protocol -Passthru
+                    [Microsoft.Web.Administration.Site] $site = New-IISSite $Name $Path $bindingInfo $Protocol -Passthru
                     $site.Applications["/"].ApplicationPoolName = $AppPoolName
                     $site | ForEach-Object $SiteConfig
                 }
@@ -140,7 +130,7 @@ function New-IISWebsite {
             Set-CaccaIISSiteAcl @siteAclParams -WhatIf:$WhatIfPreference
 
             if ($PassThru -and $WhatIfPreference -eq $false) {
-                Get-IISSite $SiteName   
+                Get-IISSite $Name
             }
         }
         catch {
