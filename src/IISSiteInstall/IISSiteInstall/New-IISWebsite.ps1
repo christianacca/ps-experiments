@@ -84,7 +84,7 @@ function New-IISWebsite {
             }
 
             if ($existingSite -ne $null) {
-                Remove-IISWebsite $Name
+                Remove-IISWebsite $Name -Confirm:$false
             }
 
             Start-IISCommitDelay

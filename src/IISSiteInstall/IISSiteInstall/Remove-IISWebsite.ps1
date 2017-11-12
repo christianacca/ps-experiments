@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISWebsite {
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
@@ -24,7 +24,8 @@ function Remove-IISWebsite {
                     Remove-IISSite $Name -Confirm:$false
                 }
 
-                if ($PSCmdlet.ShouldProcess($Name, 'Removing (non-shared) App pool(s)')) {
+                if ($WhatIfPreference -ne $true) {
+                    # note: skipping errors when deleting app pool when that pool is shared by other sites
                     $siteInfo | Select-Object -Exp AppPool_Name -Unique | 
                         Remove-IISAppPool -EA Ignore -Commit:$false
                 }

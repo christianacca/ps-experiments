@@ -5,7 +5,7 @@ Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
 New-CaccaIISWebsite FakeSite C:\inetpub\sites\FakeSite -Force
 
-Remove-CaccaIISWebSite FakeSite
+Remove-CaccaIISWebSite FakeSite -Confirm:$false
 
 # Remove-CaccaIISWebsite Series5
 # Reset-IISServerManager -Confirm:$false

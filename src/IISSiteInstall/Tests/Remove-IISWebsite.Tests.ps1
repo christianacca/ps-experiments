@@ -32,7 +32,7 @@ Describe 'Remove-IISWebsite' {
 
         It 'Should remove site and app pool' {
             # when
-            Remove-CaccaIISWebsite $testSiteName
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
 
             # then
             Reset-IISServerManager -Confirm:$false
@@ -51,7 +51,7 @@ Describe 'Remove-IISWebsite' {
 
         It 'ServerManager should be reset after delete' {
             # when
-            Remove-CaccaIISWebsite $testSiteName
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
 
             New-IISSite $testSiteName $TestDrive '*:2222:' -Passthru | Should -Not -BeNullOrEmpty
         }
@@ -74,7 +74,7 @@ Describe 'Remove-IISWebsite' {
 
         It 'Should remove site and site and child app pool' {
             # when
-            Remove-CaccaIISWebsite $testSiteName
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
             
             # then
             Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
@@ -103,7 +103,7 @@ Describe 'Remove-IISWebsite' {
         
         It 'Should remove site except share app pool' {
             # when
-            Remove-CaccaIISWebsite $testSiteName
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
                     
             # then
             Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
