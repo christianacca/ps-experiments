@@ -29,6 +29,14 @@ Describe 'Remove-IISAppPool' {
             # then
             Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
         }
+
+        It '-WhatIf should make no modifications' {
+            # when
+            Remove-CaccaIISAppPool $tempAppPool -WhatIf
+
+            # then
+            Get-IISAppPool $tempAppPool | Should -Not -BeNullOrEmpty
+        }
     }
 
     Context 'Existing pool in use by Web app' {

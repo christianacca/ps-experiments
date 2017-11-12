@@ -67,15 +67,12 @@ function New-IISWebsite {
         if ($AppPoolConfig -eq $null) {
             $AppPoolConfig = {}
         }
-        if (!$PSBoundParameters.ContainsKey('Commit')) {
-            $Commit = $true
-        }
     }
     
     process {
         try {
             
-            $existingSite = Get-IISSite $Name;
+            $existingSite = Get-IISSite $Name -WA Ignore;
             if ($existingSite -ne $null -and !$Force) {
                 throw "Site already exists. To overwrite you must supply -Force"
             }
@@ -86,15 +83,13 @@ function New-IISWebsite {
                 }
             }
 
-            if ($Commit) {
-                Start-IISCommitDelay
+            if ($existingSite -ne $null) {
+                Remove-IISWebsite $Name
             }
 
-            try {
+            Start-IISCommitDelay
 
-                if ($existingSite -ne $null) {
-                    Remove-IISWebsite $Name -Commit:$false
-                }
+            try {
     
                 New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false
     
@@ -105,18 +100,14 @@ function New-IISWebsite {
                     $site | ForEach-Object $SiteConfig
                 }
     
-                if ($Commit) {
-                    Stop-IISCommitDelay
-                }
+                Stop-IISCommitDelay
             }
             catch {
-                if ($Commit) {
-                    Stop-IISCommitDelay -Commit:$false
-                }
+                Stop-IISCommitDelay -Commit:$false
                 throw
             }
             finally {
-                Reset-IISServerManager -Confirm:$false
+                Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
             $siteAclParams = @{

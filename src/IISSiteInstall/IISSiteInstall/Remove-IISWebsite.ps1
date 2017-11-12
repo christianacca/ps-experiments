@@ -5,44 +5,38 @@ function Remove-IISWebsite {
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [string] $Name,
-
-        [switch] $Commit
+        [string] $Name
     )
     
     begin {
         Set-StrictMode -Version 'Latest'
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-
-        if (!$PSBoundParameters.ContainsKey('Commit')) {
-            $Commit = $true
-        }
     }
     
     process {
         try {
             $siteInfo = Get-IISSiteHierarchyInfo $Name
-            [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
 
-            if ($Commit) {
-                Start-IISCommitDelay
-            }
+            Start-IISCommitDelay
             try {
-                if ($PSCmdlet.ShouldProcess($Name, 'Deleting Website')) {
+                if ($PSCmdlet.ShouldProcess($Name, 'Removing IIS Website')) {
                     Remove-IISSite $Name -Confirm:$false
                 }
 
-                $siteInfo | Select-Object -Exp AppPool_Name -Unique | Remove-IISAppPool -EA Ignore -Commit:$false          
-                if ($Commit) {
-                    Stop-IISCommitDelay
-                }      
+                if ($PSCmdlet.ShouldProcess($Name, 'Removing (non-shared) App pool(s)')) {
+                    $siteInfo | Select-Object -Exp AppPool_Name -Unique | 
+                        Remove-IISAppPool -EA Ignore -Commit:$false
+                }
+
+                Stop-IISCommitDelay     
             }
             catch {
-                if ($Commit) {
-                    Stop-IISCommitDelay -Commit:$false
-                }
+                Stop-IISCommitDelay -Commit:$false
                 throw
+            }
+            finally {
+                Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
         }

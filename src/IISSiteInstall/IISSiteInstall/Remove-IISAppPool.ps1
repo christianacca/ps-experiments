@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISAppPool {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
@@ -47,7 +47,9 @@ function Remove-IISAppPool {
                     throw "Cannot delete AppPool, '$Name' is used by one or more Web applications/sites"
                 }
 
-                $manager.ApplicationPools.Remove($pool)     
+                if ($PSCmdlet.ShouldProcess($Name, 'Removing App pool')) {
+                    $manager.ApplicationPools.Remove($pool)
+                }
                 
                 if ($Commit) {
                     Stop-IISCommitDelay

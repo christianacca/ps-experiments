@@ -39,7 +39,6 @@ Describe 'New-IISAppPool' {
         function Cleanup {
             Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName
-            Reset-IISServerManager -Confirm:$false
         }
 
 

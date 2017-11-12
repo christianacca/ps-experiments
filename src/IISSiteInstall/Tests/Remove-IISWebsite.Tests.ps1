@@ -35,6 +35,7 @@ Describe 'Remove-IISWebsite' {
             Remove-CaccaIISWebsite $testSiteName
 
             # then
+            Reset-IISServerManager -Confirm:$false
             Get-IISSite $testSiteName -WA Ignore | Should -BeNullOrEmpty
             Get-IISAppPool $tempAppPool -WA Ignore | Should -BeNullOrEmpty
         }
@@ -49,7 +50,10 @@ Describe 'Remove-IISWebsite' {
         }
 
         It 'ServerManager should be reset after delete' {
+            # when
+            Remove-CaccaIISWebsite $testSiteName
 
+            New-IISSite $testSiteName $TestDrive '*:2222:' -Passthru | Should -Not -BeNullOrEmpty
         }
 
     }
