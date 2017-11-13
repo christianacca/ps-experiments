@@ -24,17 +24,26 @@ function Get-IISSiteAclPath {
 
             $candidatePaths = @()
 
-            $sitePaths = Get-IISSiteHierarchyInfo $Name | Select-Object -Exp App_PhysicalPath | Where-Object { Test-Path $_ }
+            $sitePaths = @()
+            $sitePaths += $siteInfo | Select-Object -Exp App_PhysicalPath | Where-Object { Test-Path $_ }
+
+            Write-Debug "Site Path count: $(($sitePaths | measure).Count)"
+
+
             # note: excluding node_modules for perf reasons (hopefully no site adds permissions to specific node modules!)
-            $siteSubPaths = Get-ChildItem $sitePaths -Recurse -Directory -Depth 5 -Exclude 'node_modules' |
+            $siteSubPaths = @()
+            $siteSubPaths += Get-ChildItem $sitePaths -Recurse -Directory -Depth 5 -Exclude 'node_modules' |
                 Select-Object -Exp FullName
             $uniqueFolderPaths = $sitePaths + $siteSubPaths | Select -Unique
 
-            $siteFilePaths = @('*.bat', '*.exe', '*.ps1') | ForEach-Object {
+            $siteFilePaths = @()
+            $siteFilePaths += @('*.bat', '*.exe', '*.ps1') | ForEach-Object {
                 Get-ChildItem $uniqueFolderPaths -Recurse -File -Depth 5 -Filter $_ |
                     Select-Object -Exp FullName
             }
             $uniqueSitePaths = $uniqueFolderPaths + $siteFilePaths | Select -Unique
+
+            Write-Debug "All Site candidate paths count: $(($sitePaths | measure).Count)"
 
             $candidatePaths += $uniqueSitePaths
             $candidatePaths += Get-CaccaTempAspNetFilesPaths

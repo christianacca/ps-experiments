@@ -101,14 +101,15 @@ Describe 'Remove-IISWebsite' {
     }
 
     Context "Site and child app - shared app pool" {
-        
-        BeforeAll {
-            Cleanup
-            New-CaccaIISWebsite $test2SiteName (Join-Path $TestDrive 'Site2') -Force -Port 3564
 
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $temp2AppPool -Force -PassThru
+        BeforeAll {
+
+            Cleanup
+            New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -AppPoolName $temp2AppPool -Force -Port 3564
+
+            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -PassThru
             Start-IISCommitDelay
-            $app = $site.Applications.Add('/MyApp1', (Join-Path $TestDrive 'MyApp1'))
+            $app = $site.Applications.Add('/MyApp1', "$TestDrive\MyApp1")
             $app.ApplicationPoolName = $temp2AppPool
             Stop-IISCommitDelay
             Reset-IISServerManager -Confirm:$false

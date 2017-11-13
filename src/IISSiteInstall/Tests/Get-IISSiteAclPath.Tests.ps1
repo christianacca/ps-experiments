@@ -205,7 +205,7 @@ Describe 'Get-IISSiteAclPath' {
         }
 
         AfterAll {
-            Remove-CaccaIISWebsite $testSiteName
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
         
         It 'Should include paths for both AppPool identities' {

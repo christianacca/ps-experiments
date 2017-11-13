@@ -35,7 +35,6 @@ Describe 'Get-IISSiteHierarchyInfo' {
 
             # then
             $pool = Get-IISAppPool $tempAppPool
-            Write-Host ($pool.ProcessModel.IdentityType)
 
             $expected = [PsCustomObject]@{
                 Site_Name            = $testSiteName

@@ -16,8 +16,14 @@ function Remove-IISWebsite {
     
     process {
         try {
+            # note: this will produce a warning if site does not exist (this is the desire behaviour - no need to reproduce here)
             $siteInfo = Get-IISSiteHierarchyInfo $Name
-            $permissions = Get-IISSiteAclPath $Name
+
+            if (!$siteInfo) {
+                return
+            }
+
+            Get-IISSiteAclPath $Name | Remove-CaccaUserFromAcl
 
             Start-IISCommitDelay
             try {
@@ -40,9 +46,6 @@ function Remove-IISWebsite {
             finally {
                 Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
-
-            $permissions | Remove-CaccaUserFromAcl
-
 
         }
         catch {
