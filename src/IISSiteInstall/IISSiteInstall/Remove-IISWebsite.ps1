@@ -17,6 +17,7 @@ function Remove-IISWebsite {
     process {
         try {
             $siteInfo = Get-IISSiteHierarchyInfo $Name
+            $permissions = Get-IISSiteAclPath $Name
 
             Start-IISCommitDelay
             try {
@@ -40,7 +41,19 @@ function Remove-IISWebsite {
                 Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
-            # todo: remove AppPoolIdentity user from folder/file ACL's
+            $permissions | ForEach-Object {
+                if ($PSCmdlet.ShouldProcess($_.Path, "Removing user '$($_.IdentityReference)'")) {
+
+                    $id = $_.IdentityReference
+
+                    $acl = (Get-Item $_.Path).GetAccessControl('Access')
+                    $acl.Access | 
+                        Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $id } |
+                        ForEach-Object { $acl.RemoveAccessRuleAll($_) }
+                    Set-Acl -Path ($_.Path) -AclObject $acl
+                }
+            }
+
 
         }
         catch {

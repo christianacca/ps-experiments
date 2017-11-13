@@ -25,7 +25,7 @@ function Get-IISSiteHierarchyInfo {
                 }
             }
 
-            Get-IISSite @siteParams -PV site |
+            Get-IISSite @siteParams -PV site -WA SilentlyContinue |
                 Select-Object -Exp Applications -PV app |
                 Get-IISAppPool -Name {$_.ApplicationPoolName} -PV pool |
                 select  `

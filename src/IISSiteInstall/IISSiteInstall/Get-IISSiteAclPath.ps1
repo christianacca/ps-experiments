@@ -20,16 +20,18 @@ function Get-IISSiteAclPath {
             $siteInfo = Get-IISSiteHierarchyInfo $Name
 
             $appPoolUsernames = @()
-            $appPoolUsernames += $siteInfo.AppPool_Username | Select -Unique
+            $appPoolUsernames += $siteInfo | Select-Object -Exp AppPool_Username | Select -Unique
 
             $candidatePaths = @()
 
             $sitePaths = Get-IISSiteHierarchyInfo $Name | Select-Object -Exp App_PhysicalPath
+            # note: excluding node_modules for perf reasons (hopefully no site adds permissions to specific node modules!)
             $siteSubPaths = Get-ChildItem $sitePaths -Recurse -Directory -Depth 5 -Exclude 'node_modules' |
                 Select-Object -Exp FullName
             $uniqueFolderPaths = $sitePaths + $siteSubPaths | Select -Unique
+
             $siteFilePaths = @('*.bat', '*.exe', '*.ps1') | ForEach-Object {
-                Get-ChildItem $uniqueFolderPaths -Recurse -File -Depth 5 -Filter $_ -Exclude 'node_modules' |
+                Get-ChildItem $uniqueFolderPaths -Recurse -File -Depth 5 -Filter $_ |
                     Select-Object -Exp FullName
             }
             $uniqueSitePaths = $uniqueFolderPaths + $siteFilePaths | Select -Unique

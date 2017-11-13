@@ -186,7 +186,7 @@ Describe 'Get-IISSiteAclPath' {
             $childPath = "$TestDrive\MyApp1"
             $child2Path = "$TestDrive\MyApp2"
 
-            New-CaccaIISAppPool 'AnotherPool'
+            New-CaccaIISAppPool 'AnotherPool' -Force
             Reset-IISServerManager -Confirm:$false
             [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -PassThru
             New-Item $childPath, $child2Path  -ItemType Directory

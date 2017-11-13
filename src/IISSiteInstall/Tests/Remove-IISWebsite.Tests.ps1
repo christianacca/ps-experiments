@@ -7,6 +7,7 @@ Import-Module $modulePath
 $testSiteName = 'DeleteMeSite'
 $test2SiteName = 'DeleteMeSite2'
 $tempAppPool = "$testSiteName-AppPool"
+$tempAppPoolUsername = "IIS AppPool\$testSiteName-AppPool"
 $temp2AppPool = "$test2SiteName-AppPool"
 $childAppPool = "MyApp-AppPool"
 
@@ -54,6 +55,22 @@ Describe 'Remove-IISWebsite' {
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
 
             New-IISSite $testSiteName $TestDrive '*:2222:' -Passthru | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Should remove App pool file permissions' {
+            # checking assumptions
+            $getAppPoolPermissions = {
+                (Get-Item $TestDrive).GetAccessControl('Access').Access |
+                Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $tempAppPoolUsername }
+            }
+
+            & $getAppPoolPermissions | Should -Not -BeNullOrEmpty
+
+            # when
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+
+            # then
+            & $getAppPoolPermissions | Should -BeNullOrEmpty
         }
 
     }
