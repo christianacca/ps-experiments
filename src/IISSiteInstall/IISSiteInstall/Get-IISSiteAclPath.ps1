@@ -18,13 +18,32 @@ function Get-IISSiteAclPath {
     process {
         try {
             $siteInfo = Get-IISSiteHierarchyInfo $Name
+
+            $appPoolUsernames = @()
+            $appPoolUsernames += $siteInfo.AppPool_Username | Select -Unique
+
             $candidatePaths = @()
-            $candidatePaths += Get-IISSiteHierarchyInfo $Name | Select-Object -Exp App_PhysicalPath
+
+            $sitePaths = Get-IISSiteHierarchyInfo $Name | Select-Object -Exp App_PhysicalPath
+            $siteSubPaths = Get-ChildItem $sitePaths -Recurse -Directory -Depth 5 -Exclude 'node_modules' |
+                Select-Object -Exp FullName
+            $uniqueFolderPaths = $sitePaths + $siteSubPaths | Select -Unique
+            $siteFilePaths = @('*.bat', '*.exe', '*.ps1') | ForEach-Object {
+                Get-ChildItem $uniqueFolderPaths -Recurse -File -Depth 5 -Filter $_ -Exclude 'node_modules' |
+                    Select-Object -Exp FullName
+            }
+            $uniqueSitePaths = $uniqueFolderPaths + $siteFilePaths | Select -Unique
+
+            $candidatePaths += $uniqueSitePaths
             $candidatePaths += Get-CaccaTempAspNetFilesPaths
-            
-            $candidatePaths | Where-Object {
-                (Get-Item $_).GetAccessControl('Access').Access |
-                    Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $siteInfo.AppPool_Username }
+
+            foreach ($username in $appPoolUsernames) {
+                $candidatePaths | ForEach-Object {
+                    $path = $_
+                    (Get-Item $path).GetAccessControl('Access').Access |
+                        Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $username } |
+                        Select-Object @{n = 'Path'; e = {$path}}, @{n = 'IdentityReference'; e = {$username}}
+                }
             }
 
         }
