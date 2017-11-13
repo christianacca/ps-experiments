@@ -24,7 +24,7 @@ function Get-IISSiteAclPath {
 
             $candidatePaths = @()
 
-            $sitePaths = Get-IISSiteHierarchyInfo $Name | Select-Object -Exp App_PhysicalPath
+            $sitePaths = Get-IISSiteHierarchyInfo $Name | Select-Object -Exp App_PhysicalPath | Where-Object { Test-Path $_ }
             # note: excluding node_modules for perf reasons (hopefully no site adds permissions to specific node modules!)
             $siteSubPaths = Get-ChildItem $sitePaths -Recurse -Directory -Depth 5 -Exclude 'node_modules' |
                 Select-Object -Exp FullName

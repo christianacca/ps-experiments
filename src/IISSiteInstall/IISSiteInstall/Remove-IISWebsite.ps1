@@ -41,18 +41,7 @@ function Remove-IISWebsite {
                 Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
-            $permissions | ForEach-Object {
-                if ($PSCmdlet.ShouldProcess($_.Path, "Removing user '$($_.IdentityReference)'")) {
-
-                    $id = $_.IdentityReference
-
-                    $acl = (Get-Item $_.Path).GetAccessControl('Access')
-                    $acl.Access | 
-                        Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $id } |
-                        ForEach-Object { $acl.RemoveAccessRuleAll($_) }
-                    Set-Acl -Path ($_.Path) -AclObject $acl
-                }
-            }
+            $permissions | Remove-CaccaUserFromAcl
 
 
         }

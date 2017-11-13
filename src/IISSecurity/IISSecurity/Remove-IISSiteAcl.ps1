@@ -100,16 +100,7 @@ function Remove-IISSiteAcl {
 
             ValidateAclPaths $permissions 'Cannot remove permissions; missing paths detected'
 
-            $permissions | ForEach-Object {
-                if ($PSCmdlet.ShouldProcess($_.Path, "Removing user '$appPoolIdentityName'")) {
-
-                    $acl = (Get-Item $_.Path).GetAccessControl('Access')
-                    $acl.Access | 
-                        Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $appPoolIdentityName } |
-                        ForEach-Object { $acl.RemoveAccessRuleAll($_) }
-                    Set-Acl -Path ($_.Path) -AclObject $acl
-                }
-            }
+            $permissions | Remove-UserFromAcl -IdentityReference $appPoolIdentityName
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
