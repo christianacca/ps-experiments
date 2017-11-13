@@ -6,7 +6,9 @@ function Get-IISSiteAclPath {
     param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
-        [string] $Name
+        [string] $Name,
+
+        [switch] $Recurse
     )
     
     begin {
@@ -29,17 +31,21 @@ function Get-IISSiteAclPath {
 
             Write-Debug "Site Path count: $(($sitePaths | measure).Count)"
 
-
             # note: excluding node_modules for perf reasons (hopefully no site adds permissions to specific node modules!)
             $siteSubPaths = @()
-            $siteSubPaths += Get-ChildItem $sitePaths -Recurse -Directory -Depth 5 -Exclude 'node_modules' |
-                Select-Object -Exp FullName
+            if ($Recurse) {
+                $siteSubPaths += Get-ChildItem $sitePaths -Recurse -Directory -Depth 5 -Exclude 'node_modules' |
+                    Select-Object -Exp FullName
+            }
+
             $uniqueFolderPaths = $sitePaths + $siteSubPaths | Select -Unique
 
             $siteFilePaths = @()
-            $siteFilePaths += @('*.bat', '*.exe', '*.ps1') | ForEach-Object {
-                Get-ChildItem $uniqueFolderPaths -Recurse -File -Depth 5 -Filter $_ |
-                    Select-Object -Exp FullName
+            if ($Recurse) {
+                $siteFilePaths += @('*.bat', '*.exe', '*.ps1') | ForEach-Object {
+                    Get-ChildItem $uniqueFolderPaths -Recurse -File -Depth 5 -Filter $_ |
+                        Select-Object -Exp FullName
+                }
             }
             $uniqueSitePaths = $uniqueFolderPaths + $siteFilePaths | Select -Unique
 

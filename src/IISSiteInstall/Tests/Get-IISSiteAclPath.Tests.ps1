@@ -135,24 +135,40 @@ Describe 'Get-IISSiteAclPath' {
                 New-Item $subFolder -ItemType Directory
                 New-Item $unsecuredSubFolder -ItemType Directory
                 icacls ("$subFolder") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
-
-                # when
-                $paths = Get-CaccaIISSiteAclPath $testSiteName
             }
 
-            It 'Should include paths to secured subfolders' {
-                # then
-                ($paths | ? Path -eq $subFolder | measure).Count | Should -Be 1
+            Context '-Recurse' {
+                BeforeAll {
+                    # when
+                    $paths = Get-CaccaIISSiteAclPath $testSiteName -Recurse
+                }
+
+                It 'Should include paths to secured subfolders' {
+                    # then
+                    ($paths | ? Path -eq $subFolder | measure).Count | Should -Be 1
+                }
+    
+                It 'Should NOT include paths to unsecured subfolders' {
+                    # then
+                    ($paths | ? Path -eq $unsecuredSubFolder | measure).Count | Should -Be 0
+                }
             }
 
-            It 'Should NOT include paths to unsecured subfolders' {
-                # then
-                ($paths | ? Path -eq $unsecuredSubFolder | measure).Count | Should -Be 0
+            Context 'No -Recurse' {
+                BeforeAll {
+                    # when
+                    $paths = Get-CaccaIISSiteAclPath $testSiteName
+                }
+
+                It 'Should NOT include paths to secured subfolders' {
+                    # then
+                    ($paths | ? Path -eq $subFolder | measure).Count | Should -Be 0
+                }
             }
         }
 
         Context '+ specific files' {
-            
+
             BeforeAll {
                 # given
                 New-Item "$childPath\SubPath" -ItemType Directory
@@ -161,20 +177,39 @@ Describe 'Get-IISSiteAclPath' {
                 $securedFile2Path = (New-Item "$childPath\SubPath\OtherProgram.exe" -Value 'source code' -Force).FullName
                 icacls ("$securedFilePath") /grant:r ("$testAppPoolUsername" + ':(RX)') | Out-Null
                 icacls ("$securedFile2Path") /grant:r ("$testAppPoolUsername" + ':(RX)') | Out-Null
-            
-                # when
-                $paths = Get-CaccaIISSiteAclPath $testSiteName
             }
             
-            It 'Should include paths to secured files' {
-                # then
-                ($paths | ? Path -eq $securedFilePath | measure).Count | Should -Be 1
-                ($paths | ? Path -eq $securedFile2Path | measure).Count | Should -Be 1
+            Context '-Recurse' {
+
+                BeforeAll {
+                    # when
+                    $paths = Get-CaccaIISSiteAclPath $testSiteName -Recurse
+                }
+                
+                It 'Should include paths to secured files' {
+                    # then
+                    ($paths | ? Path -eq $securedFilePath | measure).Count | Should -Be 1
+                    ($paths | ? Path -eq $securedFile2Path | measure).Count | Should -Be 1
+                }
+                
+                It 'Should NOT include paths to unsecured subfolders' {
+                    # then
+                    ($paths | ? Path -eq $unsecuredFilePath | measure).Count | Should -Be 0
+                }   
             }
-            
-            It 'Should NOT include paths to unsecured subfolders' {
-                # then
-                ($paths | ? Path -eq $unsecuredFilePath | measure).Count | Should -Be 0
+
+            Context 'No -Recurse' {
+                
+                BeforeAll {
+                    # when
+                    $paths = Get-CaccaIISSiteAclPath $testSiteName
+                }
+                
+                It 'Should NOT include paths to secured files' {
+                    # then
+                    ($paths | ? Path -eq $securedFilePath | measure).Count | Should -Be 0
+                    ($paths | ? Path -eq $securedFile2Path | measure).Count | Should -Be 0
+                }
             }
         }
     }
