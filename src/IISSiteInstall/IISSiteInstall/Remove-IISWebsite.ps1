@@ -23,7 +23,7 @@ function Remove-IISWebsite {
                 return
             }
 
-            Get-IISSiteAclPath $Name | Remove-CaccaUserFromAcl
+            Get-IISSiteAclPath $Name -Recurse | Where-Object IsShared -eq $false | Remove-CaccaUserFromAcl
 
             Start-IISCommitDelay
             try {

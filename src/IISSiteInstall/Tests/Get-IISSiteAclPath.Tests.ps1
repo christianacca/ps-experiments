@@ -7,8 +7,11 @@ Import-Module $modulePath
 . "$PSScriptRoot\Compare-ObjectProperties.ps1"
 
 $testSiteName = 'DeleteMeSite'
-$testAppPoolName = 'DeleteMeSite-AppPool'
-$testAppPoolUsername = 'IIS AppPool\DeleteMeSite-AppPool'
+$test2SiteName = 'DeleteMeSite2'
+$testAppPoolName = "$testSiteName-AppPool"
+$test2AppPoolName = "$test2SiteName-AppPool"
+$testAppPoolUsername = "IIS AppPool\$testAppPoolName"
+$test2AppPoolUsername = "IIS AppPool\$test2AppPoolName"
 
 Describe 'Get-IISSiteAclPath' {
 
@@ -31,8 +34,10 @@ Describe 'Get-IISSiteAclPath' {
 
             # then
             $expected = [PsCustomObject]@{
+                SiteName          = $testSiteName
                 Path              = $TestDrive.ToString()
                 IdentityReference = $testAppPoolUsername
+                IsShared          = $false
             }
             Compare-ObjectProperties $paths $expected | Should -Be $null
         }
@@ -100,8 +105,10 @@ Describe 'Get-IISSiteAclPath' {
             
             # then
             $expected = [PsCustomObject]@{
+                SiteName          = $testSiteName
                 Path              = $TestDrive.ToString()
                 IdentityReference = $testAppPoolUsername
+                IsShared          = $false
             }
             Compare-ObjectProperties $paths $expected | Should -Be $null
         }
@@ -113,12 +120,16 @@ Describe 'Get-IISSiteAclPath' {
             # then
             $expected = @(
                 [PsCustomObject]@{
+                    SiteName          = $testSiteName
                     Path              = "$TestDrive\MyApp1"
                     IdentityReference = $testAppPoolUsername
+                    IsShared          = $false
                 },
                 [PsCustomObject]@{
+                    SiteName          = $testSiteName
                     Path              = "$TestDrive\MyApp2"
                     IdentityReference = $testAppPoolUsername
+                    IsShared          = $false
                 }
             )
             ($paths | Measure-Object).Count | Should -Be 2
@@ -214,7 +225,7 @@ Describe 'Get-IISSiteAclPath' {
         }
     }
 
-    Context '+ 2 child apps with different AppPool identities' {
+    Context 'Site + 2 child apps with different AppPool identities' {
         
         BeforeAll {
             # given
@@ -248,5 +259,93 @@ Describe 'Get-IISSiteAclPath' {
             ($paths | ? IdentityReference -eq $testAppPoolUsername | measure).Count | Should -Be ($tempAspNetPathCount + 2)
             ($paths | ? IdentityReference -eq 'IIS AppPool\AnotherPool' | measure).Count | Should -Be 1
         }
+    }
+
+    Context '2 sites with overlapping paths and shared AppPool identities' {
+
+        BeforeAll {
+            # given
+            New-CaccaIISWebsite $testSiteName $TestDrive -Force -AppPoolName $testAppPoolName -Port 3333
+            New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -Force -AppPoolName $testAppPoolName
+        }
+
+        AfterAll {
+            Remove-CaccaIISWebsite $test2SiteName -Confirm:$false
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+        }
+
+        Context 'No Name filter' {
+
+            BeforeAll {
+                # when
+                $paths = Get-CaccaIISSiteAclPath
+            }
+
+            It 'Should include paths for all sites' {
+
+                # then
+                $site1Path = @{
+                    SiteName          = $testSiteName
+                    IdentityReference = $testAppPoolUsername
+                }
+                $site2Path = @{
+                    SiteName          = $test2SiteName
+                    IdentityReference = $testAppPoolUsername
+                }
+                $expected = @(
+                    $site1Path + @{ IsShared = $false; Path = $TestDrive }
+                    Get-CaccaTempAspNetFilesPaths | % { $site1Path + @{ IsShared = $true; Path = $_ } }
+                    $site2Path + @{ IsShared = $false; Path = "$TestDrive\Site2" }
+                    Get-CaccaTempAspNetFilesPaths | % { $site2Path + @{ IsShared = $true; Path = $_ } }
+                ) | % { [PsCustomObject] $_ }
+
+                ($paths | measure).Count | Should -Be ($expected.Count)
+                for ($i = 0; $i -lt $expected.Count; $i++) {
+                    Compare-ObjectProperties ($paths[$i]) ($expected[$i]) | Should -Be $null
+                }
+            }
+        }
+
+        Context 'No Name filter, -Recurse' {
+            
+            BeforeAll {
+                # when
+                $paths = Get-CaccaIISSiteAclPath $testSiteName -Recurse
+            }
+            
+            It 'Overlapping paths should not be returned in recursive results' {
+                # then
+                $site1Path = @{
+                    SiteName          = $testSiteName
+                    IdentityReference = $testAppPoolUsername
+                }
+                $site2Path = @{
+                    SiteName          = $test2SiteName
+                    IdentityReference = $testAppPoolUsername
+                }
+                $expected = @(
+                    $site1Path + @{ IsShared = $false; Path = $TestDrive }
+                    Get-CaccaTempAspNetFilesPaths | % { $site1Path + @{ IsShared = $true; Path = $_ } }
+                ) | % { [PsCustomObject] $_ }
+
+                ($paths | Where Path -eq "$TestDrive\Site2" | measure).Count | Should -Be 0
+            }
+        }
+
+        # Context '-Recurse -ExcludeShared' {
+        #     BeforeAll {
+        #         $paths = Get-CaccaIISSiteAclPath $testSiteName -ExcludeShared -Recurse
+        #     }
+
+        #     It 'Should exclude shared Temp ASP.Net files folders' {
+        #         $tempFilesFolders = Get-CaccaTempAspNetFilesPaths
+        #         # then
+        #         ($paths | ? Path -In $tempFilesFolders | measure).Count | Should -Be 0
+        #     }
+
+        #     It 'Should exclude nested paths assigned to physical paths of other sites' {
+        #         ($paths | ? Path -eq "$TestDrive\Site2" | measure).Count | Should -Be 0
+        #     }
+        # }
     }
 }

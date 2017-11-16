@@ -1,7 +1,36 @@
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
-(Get-Item 'C:\Windows\Microsoft.NET\Framework\v2.0.50727\Temporary ASP.NET Files').GetAccessControl('Access').Access.IdentityReference | gm
+Remove-IISSite 'Scrap' -Confirm:$false
+Remove-IISSite 'Scrap2' -Confirm:$false
+$testSiteName = 'Scrap'
+$childPath = "C:\inetpub\sites\$testSiteName\MyApp1"
+$child2Path = "C:\inetpub\sites\$testSiteName\MyApp2"
+$testAppPoolName = "$testSiteName-AppPool"
+$testAppPoolUsername = "IIS AppPool\$testAppPoolName"
+
+[Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite Scrap C:\inetpub\sites\Scrap -PassThru
+New-Item $childPath, $child2Path  -ItemType Directory -Force | Out-Null
+Start-IISCommitDelay
+$app = $site.Applications.Add('/MyApp1', $childPath)
+$app.ApplicationPoolName = $testAppPoolName
+$app2 = $site.Applications.Add('/MyApp2', $child2Path)
+$app2.ApplicationPoolName = $testAppPoolName
+Stop-IISCommitDelay
+icacls ("$childPath") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
+icacls ("$child2Path") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
+Reset-IISServerManager -Confirm:$false
+
+$subFolder = Join-Path $childPath 'SubPath1'
+New-Item $subFolder -ItemType Directory -Force | Out-Null
+icacls ("$subFolder") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
+
+# New-CaccaIISWebsite 'Scrap'
+# New-CaccaIISWebsite 'Scrap2' 'C:\inetpub\sites\Scrap\Scrap2' -Port 864 -AppPoolName 'Scrap-AppPool'
+
+Get-CaccaIISSiteAclPath 'Scrap' -Recurse
+
+return
 
 Reset-IISServerManager -Confirm:$false
 Remove-CaccaIISWebSite DeleteMeSite -WhatIf

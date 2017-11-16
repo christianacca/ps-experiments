@@ -6,20 +6,30 @@ Import-Module $modulePath
 
 $testSiteName = 'DeleteMeSite'
 $test2SiteName = 'DeleteMeSite2'
-$tempAppPool = "$testSiteName-AppPool"
-$tempAppPoolUsername = "IIS AppPool\$testSiteName-AppPool"
-$temp2AppPool = "$test2SiteName-AppPool"
+$testAppPool = "$testSiteName-AppPool"
+$testAppPoolUsername = "IIS AppPool\$testSiteName-AppPool"
+$test2AppPool = "$test2SiteName-AppPool"
+$test2AppPoolUsername = "IIS AppPool\$test2SiteName-AppPool"
 $childAppPool = "MyApp-AppPool"
 
 
 Describe 'Remove-IISWebsite' {
+
+    function GetAppPoolPermission {
+        param(
+            [string] $Path,
+            [string] $Username
+        )
+        (Get-Item $Path).GetAccessControl('Access').Access |
+            Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $Username }
+    }
 
     function Cleanup {
         Reset-IISServerManager -Confirm:$false
         Start-IISCommitDelay
         Remove-IISSite $testSiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
         Remove-IISSite $test2SiteName -EA Ignore -Confirm:$false -WA SilentlyContinue
-        @($tempAppPool, $temp2AppPool, $childAppPool) | Remove-CaccaIISAppPool -Commit:$false -Force -EA Ignore
+        @($testAppPool, $test2AppPool, $childAppPool) | Remove-CaccaIISAppPool -Commit:$false -Force -EA Ignore
         Stop-IISCommitDelay
         Reset-IISServerManager -Confirm:$false
     }
@@ -28,7 +38,7 @@ Describe 'Remove-IISWebsite' {
 
         BeforeEach {
             Cleanup
-            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $tempAppPool
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool
         }
 
         It 'Should remove site and app pool' {
@@ -38,7 +48,7 @@ Describe 'Remove-IISWebsite' {
             # then
             Reset-IISServerManager -Confirm:$false
             Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
-            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $testAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
         }
 
         It '-WhatIf should make no modifications' {
@@ -47,7 +57,7 @@ Describe 'Remove-IISWebsite' {
 
             # then
             Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
-            Get-IISAppPool $tempAppPool | Should -Not -BeNullOrEmpty
+            Get-IISAppPool $testAppPool | Should -Not -BeNullOrEmpty
         }
 
         It 'ServerManager should be reset after delete' {
@@ -59,18 +69,13 @@ Describe 'Remove-IISWebsite' {
 
         It 'Should remove App pool file permissions' {
             # checking assumptions
-            $getAppPoolPermissions = {
-                (Get-Item $TestDrive).GetAccessControl('Access').Access |
-                Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $tempAppPoolUsername }
-            }
-
-            & $getAppPoolPermissions | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -Not -BeNullOrEmpty
 
             # when
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
 
             # then
-            & $getAppPoolPermissions | Should -BeNullOrEmpty
+            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -BeNullOrEmpty
         }
 
     }
@@ -95,7 +100,7 @@ Describe 'Remove-IISWebsite' {
             
             # then
             Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
-            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $testAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
             Get-IISAppPool $childAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
         }
     }
@@ -104,15 +109,28 @@ Describe 'Remove-IISWebsite' {
 
         BeforeAll {
 
+            # given
             Cleanup
-            New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -AppPoolName $temp2AppPool -Force -Port 3564
+            New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -AppPoolName $test2AppPool -Port 3564
 
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -PassThru
+            $childPath = "$TestDrive\MyApp1"
+            New-Item $childPath -ItemType Directory
+            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $test2AppPool -PassThru
             Start-IISCommitDelay
-            $app = $site.Applications.Add('/MyApp1', "$TestDrive\MyApp1")
-            $app.ApplicationPoolName = $temp2AppPool
+            New-CaccaIISAppPool $testAppPool -Commit:$false
+            $app = $site.Applications.Add('/MyApp1', $childPath)
+            $app.ApplicationPoolName = $testAppPool
             Stop-IISCommitDelay
+            icacls ("$childPath") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
             Reset-IISServerManager -Confirm:$false
+
+            # checking assumptions
+            GetAppPoolPermission "$TestDrive\Site2" $test2AppPoolUsername | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $TestDrive $test2AppPoolUsername | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $childPath $testAppPoolUsername | Should -Not -BeNullOrEmpty
+
+            # when
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 
         AfterAll {
@@ -120,13 +138,20 @@ Describe 'Remove-IISWebsite' {
         }
         
         It 'Should remove site except share app pool' {
-            # when
-            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
-                    
             # then
             Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
-            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
-            Get-IISAppPool $temp2AppPool | Should -Not -BeNullOrEmpty
+            Get-IISAppPool $testAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $test2AppPool | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Should remove App pool file permissions only on non-shared folders' {
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $test2AppPoolUsername | Should -Not -BeNullOrEmpty
+            }
+            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -BeNullOrEmpty
+            GetAppPoolPermission "$TestDrive\Site2" $test2AppPoolUsername | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $childPath $testAppPoolUsername | Should -BeNullOrEmpty
         }
     }
 }
