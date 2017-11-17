@@ -30,9 +30,7 @@ function New-IISWebApp {
 
         [switch] $Force,
         
-        [switch] $Commit,
-
-        [switch] $PassThru
+        [switch] $Commit
     )
     
     begin {
@@ -79,7 +77,7 @@ function New-IISWebApp {
             }
             
             if (-not(Test-Path $childPath)) {
-                New-Item $childPath -ItemType Directory
+                New-Item $childPath -ItemType Directory | Out-Null
             }
 
             if ($Commit) {
@@ -92,11 +90,11 @@ function New-IISWebApp {
                 }
 
                 if (-not(Get-IISAppPool $AppPoolName -WA SilentlyContinue)) {
-                    New-IISAppPool $AppPoolName -Commit:$false
+                    New-IISAppPool $AppPoolName -Commit:$false | Out-Null
                 }
 
                 if ($AppPoolConfig) {
-                    Get-IISAppPool $AppPoolName | ForEach-Object $AppPoolConfig
+                    Get-IISAppPool $AppPoolName | ForEach-Object $AppPoolConfig | Out-Null
                 }
 
                 if ($PSCmdlet.ShouldProcess($qualifiedAppName, 'Create Web Application')) {
@@ -112,8 +110,10 @@ function New-IISWebApp {
                 if ($Commit) {
                     Stop-IISCommitDelay -Commit:$false
                 }
+                throw
             }
 
+            (Get-IISSite $SiteName).Applications[$Name]
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

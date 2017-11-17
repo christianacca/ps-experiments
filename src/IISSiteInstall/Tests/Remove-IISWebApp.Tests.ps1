@@ -38,7 +38,7 @@ Describe 'Remove-IISWebApp' {
             # when
             Remove-CaccaIISWebApp $testSiteName $appName
 
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should remove existing app' {
@@ -50,6 +50,12 @@ Describe 'Remove-IISWebApp' {
             # then
             Get-IISAppPool $testAppPoolName | Should -Not -BeNullOrEmpty
         }
+
+        # It 'ServerManager should be reset after delete' {
+        #     # then
+        #     # note: this will throw if the ServerManager was NOT refreshed
+        #     New-CaccaIISWebApp $testSiteName $appName -Passthru | Should -Not -BeNullOrEmpty
+        # }
     }
 
     Context 'Non-Shared app pool' {

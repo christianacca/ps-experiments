@@ -337,4 +337,46 @@ Describe 'New-IISWebApp' {
             Get-IISAppPool $appPoolName | Should -BeNullOrEmpty
         }
     }
+    
+    Context 'Application instance returned' {
+        BeforeAll {
+            # given
+            $appName = '/MyApp/Child9'
+            $appPoolName = 'NonSharedPool26'
+
+            # when
+            $app = New-CaccaIISWebApp $testSiteName $appName
+        }
+    
+        AfterAll {
+            Reset-IISServerManager -Confirm:$false
+        }
+
+        It 'Should a single non-null instance' {
+            # then
+            ($app | measure).Count | Should -Be 1
+            $app | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Should be of correct type' {
+            # then
+            $app.GetType() | Should -Be Microsoft.Web.Administration.Application
+        }
+
+        It 'Should be the same reference returned by ServerManager' {
+            # then
+            $app | Should -BeExactly (Get-IISSite $testSiteName).Applications[$appName]
+        }
+
+        It 'Should be writable' {
+            # when
+            Start-IISCommitDelay
+            $app.EnabledProtocols = 'https'
+            Stop-IISCommitDelay
+            
+            # then
+            Reset-IISServerManager -Confirm:$false
+            (Get-IISSite $testSiteName).Applications[$appName].EnabledProtocols | Should -Be 'https'
+        }
+    }
 }
