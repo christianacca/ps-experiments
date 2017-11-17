@@ -27,14 +27,22 @@ function Get-IISSiteHierarchyInfo {
 
             Get-IISSite @siteParams -PV site -WA SilentlyContinue |
                 Select-Object -Exp Applications -PV app |
-                Get-IISAppPool -Name {$_.ApplicationPoolName} -PV pool |
+                ForEach-Object {
+                    $existingPool = Get-IISAppPool -Name $_.ApplicationPoolName -WA SilentlyContinue
+                    if (!$existingPool) {
+                        ''
+                    }
+                    else {
+                        $existingPool
+                    }
+                } -PV pool |
                 select  `
             @{n = 'Site_Name'; e = {$site.Name}},
             @{n = 'App_Path'; e = {$app.Path}}, 
             @{n = 'App_PhysicalPath'; e = {$app.VirtualDirectories[0].PhysicalPath}}, 
-            @{n = 'AppPool_Name'; e = {$app.ApplicationPoolName}},
-            @{n = 'AppPool_IdentityType'; e = {$pool.ProcessModel.IdentityType}},
-            @{n = 'AppPool_Username'; e = {Get-IISAppPoolUsername $pool}}
+            @{n = 'AppPool_Name'; e = { if ($pool) { $app.ApplicationPoolName } }},
+            @{n = 'AppPool_IdentityType'; e = { if ($pool) { $pool.ProcessModel.IdentityType} }},
+            @{n = 'AppPool_Username'; e = { if ($pool) { Get-IISAppPoolUsername $pool } }}
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

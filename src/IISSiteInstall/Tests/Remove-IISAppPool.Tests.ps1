@@ -19,7 +19,7 @@ Describe 'Remove-IISAppPool' {
 
     Context 'Existing pool (not in use)' {
         BeforeEach {
-            New-CaccaIISAppPool $tempAppPool -PassThru -Commit:$false
+            New-CaccaIISAppPool $tempAppPool -Commit:$false
         }
 
         It 'Should delete pool' {
@@ -43,7 +43,7 @@ Describe 'Remove-IISAppPool' {
         
         function Cleanup {
             Reset-IISServerManager -Confirm:$false
-            Remove-CaccaIISWebsite $testSiteName -Confirm:$false -WA SilentlyContinue
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 
         BeforeEach {

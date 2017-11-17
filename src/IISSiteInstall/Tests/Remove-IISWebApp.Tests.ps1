@@ -4,12 +4,13 @@ $moduleName = Split-Path (Split-Path $modulePath) -Leaf
 Get-Module $moduleName -All | Remove-Module
 Import-Module $modulePath
 
-$testSiteName = 'DeleteMeSite'
+$testSiteName = 'DeleteMeSite5'
 $testAppPoolName = "$testSiteName-AppPool"
 
 Describe 'Remove-IISWebApp' {
 
     BeforeAll {
+        Reset-IISServerManager -Confirm:$false
         # given
         $sitePath = "$TestDrive\$testSiteName"
         New-CaccaIISWebsite $testSiteName $sitePath -AppPoolName $testAppPoolName -Force

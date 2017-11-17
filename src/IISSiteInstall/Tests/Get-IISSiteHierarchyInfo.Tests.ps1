@@ -49,6 +49,37 @@ Describe 'Get-IISSiteHierarchyInfo' {
         }
     }
 
+    
+    Context 'Site missing AppPool' {
+        
+        BeforeAll {
+            Reset-IISServerManager -Confirm:$false
+            New-CaccaIISWebsite $testSiteName $TestDrive -Force
+            Remove-CaccaIISAppPool $tempAppPool -Force
+        }
+        
+        AfterAll {
+            Cleanup
+        }
+        
+        It 'Should return site app pool' {
+            # when
+            $info = Get-CaccaIISSiteHierarchyInfo $testSiteName
+        
+            # then
+            $expected = [PsCustomObject]@{
+                Site_Name            = $testSiteName
+                App_Path             = '/'
+                App_PhysicalPath     = $TestDrive
+                AppPool_Name         = $null
+                AppPool_IdentityType = $null
+                AppPool_Username     = $null
+            }
+            ($info | Measure-Object).Count | Should -Be 1
+            Compare-ObjectProperties $info $expected | Should -Be $null
+        }
+    }
+
     Context 'All sites' {
         
         BeforeAll {

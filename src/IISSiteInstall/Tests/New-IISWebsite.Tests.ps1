@@ -7,19 +7,23 @@ Import-Module $modulePath
 $testSiteName = 'DeleteMeSite'
 $testAppPoolName = "$testSiteName-AppPool"
 $sitePath = "C:\inetpub\sites\$testSiteName"
-$tempSitePath = "$Env:TEMP\$testSiteName"
-$appPoolNames = [System.Collections.ArrayList]::new()
 
 Describe 'New-IISWebsite' {
 
     function Cleanup {
         Reset-IISServerManager -Confirm:$false
-        Remove-CaccaIISWebsite $testSiteName -Confirm:$false -WA SilentlyContinue
-        Remove-Item $tempSitePath -Recurse -Confirm:$false -EA Ignore
-        Remove-Item $sitePath -Recurse -Confirm:$false -EA Ignore
+        $siteToDelete = Get-IISSite $testSiteName -WA SilentlyContinue
+        if ($siteToDelete) {
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+            Remove-Item ($siteToDelete.Applications['/'].VirtualDirectories['/'].PhysicalPath) -Recurse -Confirm:$false
+        }
+        if (Test-Path $sitePath) {
+            Remove-Item $sitePath -Recurse -Confirm:$false
+        }
     }
 
     BeforeEach {
+        $tempSitePath = "$TestDrive\$testSiteName"
         Cleanup
     }
 
