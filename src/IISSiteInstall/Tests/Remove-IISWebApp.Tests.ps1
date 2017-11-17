@@ -12,7 +12,7 @@ Describe 'Remove-IISWebApp' {
     BeforeAll {
         # given
         $sitePath = "$TestDrive\$testSiteName"
-        New-CaccaIISWebsite $testSiteName $sitePath -Force -AppPoolName $testAppPoolName
+        New-CaccaIISWebsite $testSiteName $sitePath -AppPoolName $testAppPoolName -Force
     }
 
     AfterAll {
@@ -33,12 +33,9 @@ Describe 'Remove-IISWebApp' {
             # given
             $appName = 'MyApp'
             New-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
 
             # when
             Remove-CaccaIISWebApp $testSiteName $appName
-
-            # Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should remove existing app' {
@@ -64,16 +61,10 @@ Describe 'Remove-IISWebApp' {
             # given
             $appPoolName = 'NonSharedPool'
             $appName = 'MyApp'
-            Start-IISCommitDelay
-            New-CaccaIISAppPool $appPoolName -Force -Commit:$false
-            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -Commit:$false
-            Stop-IISCommitDelay
-            Reset-IISServerManager -Confirm:$false
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName
         
             # when
             Remove-CaccaIISWebApp $testSiteName $appName
-
-            Reset-IISServerManager -Confirm:$false
         }
         
         It 'Should remove existing app' {

@@ -72,8 +72,8 @@ function New-IISWebsite {
     process {
         try {
             
-            $existingSite = Get-IISSite $Name -WA SilentlyContinue;
-            if ($existingSite -ne $null -and !$Force) {
+            $existingSite = Get-IISSite $Name -WA SilentlyContinue
+            if ($existingSite -and !$Force) {
                 throw "Site already exists. To overwrite you must supply -Force"
             }
 
@@ -82,7 +82,7 @@ function New-IISWebsite {
                 New-Item $Path -ItemType Directory -WhatIf:$false | Out-Null
             }
 
-            if ($existingSite -ne $null) {
+            if ($existingSite) {
                 Remove-IISWebsite $Name -Confirm:$false
             }
 

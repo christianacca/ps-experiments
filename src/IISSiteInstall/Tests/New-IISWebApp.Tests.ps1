@@ -25,13 +25,10 @@ Describe 'New-IISWebApp' {
             $appName = 'MyApp'
             # when
             New-CaccaIISWebApp $testSiteName $appName
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should have created child app' {
@@ -68,13 +65,10 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should have created child app with name supplied' {
@@ -100,13 +94,10 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName $appPhysicalPath
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should use physical path supplied' {
@@ -126,13 +117,10 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName $appPhysicalPath
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should use physical path supplied' {
@@ -150,18 +138,14 @@ Describe 'New-IISWebApp' {
                 $_.Enable32BitAppOnWin64 = $false
                 $_.AutoStart = $false
             }
-            Reset-IISServerManager -Confirm:$false
             $appName = '/MyApp'
 
             # when
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should assign existing pool supplied' {
@@ -186,13 +170,10 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should create new pool' {
@@ -215,20 +196,16 @@ Describe 'New-IISWebApp' {
                 $_.Enable32BitAppOnWin64 = $false
                 $_.AutoStart = $false
             }
-            Reset-IISServerManager -Confirm:$false
             $appName = '/MyApp'
 
             # when
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -AppPoolConfig {
                 $_.AutoStart = $true
             }
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should configure existing pool' {
@@ -250,13 +227,10 @@ Describe 'New-IISWebApp' {
                 $_.Enable32BitAppOnWin64 = $false
                 $_.AutoStart = $false
             }
-
-            Reset-IISServerManager -Confirm:$false
         }
     
         AfterAll {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should configure new pool' {
@@ -277,12 +251,10 @@ Describe 'New-IISWebApp' {
                 $_.Enable32BitAppOnWin64 = $false
                 $_.AutoStart = $false
             }
-            Reset-IISServerManager -Confirm:$false
         }
 
         AfterEach {
             Remove-CaccaIISWebApp $testSiteName $appName
-            Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should throw' {
@@ -297,7 +269,6 @@ Describe 'New-IISWebApp' {
             }
 
             # then
-            Reset-IISServerManager -Confirm:$false
             $app = (Get-IISSite $testSiteName).Applications[$appName]
             $app.ApplicationPoolName | Should -Be $testAppPoolName
             $pool = Get-IISAppPool $testAppPoolName
@@ -349,7 +320,7 @@ Describe 'New-IISWebApp' {
         }
     
         AfterAll {
-            Reset-IISServerManager -Confirm:$false
+            Remove-CaccaIISWebApp $testSiteName $appName
         }
 
         It 'Should a single non-null instance' {

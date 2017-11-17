@@ -9,7 +9,7 @@ $child2Path = "C:\inetpub\sites\$testSiteName\MyApp2"
 $testAppPoolName = "$testSiteName-AppPool"
 $testAppPoolUsername = "IIS AppPool\$testAppPoolName"
 
-[Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite Scrap -PassThru -Force
+[Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite DeleteMeSite -PassThru -Force
 $root = $site.Applications['/'].VirtualDirectories['/']
 
 # New-Item $childPath, $child2Path  -ItemType Directory -Force | Out-Null

@@ -10,9 +10,7 @@ function Remove-IISWebApp {
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [string] $Name,
-        
-        [switch] $Commit
+        [string] $Name
     )
     
     begin {
@@ -25,10 +23,6 @@ function Remove-IISWebApp {
 
         if (!$Name.StartsWith('/')) {
             $Name = '/' + $Name
-        }
-
-        if (!$PSBoundParameters.ContainsKey('Commit')) {
-            $Commit = $true
         }
     }
     
@@ -47,9 +41,7 @@ function Remove-IISWebApp {
                 return
             }
 
-            if ($Commit) {
-                Start-IISCommitDelay
-            }
+            Start-IISCommitDelay
 
             try {
 
@@ -62,14 +54,14 @@ function Remove-IISWebApp {
                     Remove-IISAppPool ($app.ApplicationPoolName) -EA Ignore -Commit:$false
                 }
 
-                if ($Commit) {
-                    Stop-IISCommitDelay
-                }
+                Stop-IISCommitDelay
             }
             catch {
-                if ($Commit) {
-                    Stop-IISCommitDelay -Commit:$false
-                }
+                Stop-IISCommitDelay -Commit:$false
+                throw
+            }
+            finally {
+                Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
         }
         catch {

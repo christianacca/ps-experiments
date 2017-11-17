@@ -28,9 +28,7 @@ function New-IISWebApp {
         [Parameter(ValueFromPipeline)]
         [string[]] $ExecutePaths,
 
-        [switch] $Force,
-        
-        [switch] $Commit
+        [switch] $Force
     )
     
     begin {
@@ -43,10 +41,6 @@ function New-IISWebApp {
 
         if (!$Name.StartsWith('/')) {
             $Name = '/' + $Name
-        }
-
-        if (!$PSBoundParameters.ContainsKey('Commit')) {
-            $Commit = $true
         }
     }
     
@@ -80,15 +74,16 @@ function New-IISWebApp {
                 New-Item $childPath -ItemType Directory | Out-Null
             }
 
-            if ($Commit) {
-                Start-IISCommitDelay
+            if ($existingApp) {
+                Remove-IISWebApp $SiteName $Name
             }
 
-            try {
-                if ($existingApp) {
-                    Remove-IISWebApp $SiteName $Name -Commit:$false
-                }
+            # Remove-IISWebApp has just committed changes making our $site instance read-only, therefore fetch another one
+            $site = Get-IISSite $SiteName
 
+            Start-IISCommitDelay
+
+            try {
                 if (-not(Get-IISAppPool $AppPoolName -WA SilentlyContinue)) {
                     New-IISAppPool $AppPoolName -Commit:$false | Out-Null
                 }
@@ -102,15 +97,14 @@ function New-IISWebApp {
                     $app.ApplicationPoolName = $AppPoolName
                 }
 
-                if($Commit) {
-                    Stop-IISCommitDelay
-                }
+                Stop-IISCommitDelay
             }
             catch {
-                if ($Commit) {
-                    Stop-IISCommitDelay -Commit:$false
-                }
+                Stop-IISCommitDelay -Commit:$false
                 throw
+            }
+            finally {
+                Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
             (Get-IISSite $SiteName).Applications[$Name]
