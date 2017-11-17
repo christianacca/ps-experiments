@@ -47,7 +47,7 @@ function Remove-IISAppPool {
                     throw "Cannot delete AppPool, '$Name' is used by one or more Web applications/sites"
                 }
 
-                if ($PSCmdlet.ShouldProcess($Name, 'Removing App pool')) {
+                if ($PSCmdlet.ShouldProcess($Name, 'Remove App pool')) {
                     $manager.ApplicationPools.Remove($pool)
                 }
                 

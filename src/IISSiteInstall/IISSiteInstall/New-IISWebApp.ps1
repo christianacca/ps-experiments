@@ -70,8 +70,9 @@ function New-IISWebApp {
                 $Path
             }
             
-            if (-not(Test-Path $childPath)) {
-                New-Item $childPath -ItemType Directory | Out-Null
+            $isPathExists = Test-Path $childPath
+            if (!$isPathExists -and $PSCmdlet.ShouldProcess($childPath, 'Create Web Application physical path')) {
+                New-Item $childPath -ItemType Directory -WhatIf:$false | Out-Null
             }
 
             if ($existingApp) {

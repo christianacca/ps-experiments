@@ -47,12 +47,12 @@ function New-IISAppPool {
             }
             try {
                 if ($existingPool) {
-                    if ($PSCmdlet.ShouldProcess($Name, 'Removing existing App pool')) {
+                    if ($PSCmdlet.ShouldProcess($Name, 'Remove existing App pool')) {
                         $manager.ApplicationPools.Remove($existingPool)
                     }
                 }
 
-                if ($PSCmdlet.ShouldProcess($Name, 'Creating App pool')) {
+                if ($PSCmdlet.ShouldProcess($Name, 'Create App pool')) {
                     [Microsoft.Web.Administration.ApplicationPool] $pool = $manager.ApplicationPools.Add($Name)
                     $pool.ManagedPipelineMode = "Integrated"
                     $pool.ManagedRuntimeVersion = "v4.0"

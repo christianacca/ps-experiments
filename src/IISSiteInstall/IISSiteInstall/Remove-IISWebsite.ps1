@@ -27,7 +27,7 @@ function Remove-IISWebsite {
 
             Start-IISCommitDelay
             try {
-                if ($PSCmdlet.ShouldProcess($Name, 'Removing IIS Website')) {
+                if ($PSCmdlet.ShouldProcess($Name, 'Remove IIS Website')) {
                     Remove-IISSite $Name -Confirm:$false
                 }
 

@@ -65,7 +65,7 @@ Describe 'New-IISWebsite' {
         }
 
         # when
-        $site = New-CaccaIISWebsite $testSiteName -SiteConfig $siteConfig -PassThru
+        $site = New-CaccaIISWebsite $testSiteName -SiteConfig $siteConfig
 
         # then
         $siteArg | Should -Not -Be $null
@@ -113,17 +113,17 @@ Describe 'New-IISWebsite' {
         New-CaccaIISWebsite $testSiteName -SiteShellOnly
 
         # then
-        Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
+        Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty  
         # todo: verify that Set-CaccaIISSiteAcl called with -SiteShellOnly
     }
 
-    It "Site returned by -PassThru should be modifiable" {
+    It "Site returned should be modifiable" {
         # given
         $otherPath = "TestDrive:\SomeFolder"
         New-Item $otherPath -ItemType Directory
 
         # when
-        [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName -PassThru
+        [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName
 
         Start-IISCommitDelay
         $site.Applications['/'].VirtualDirectories['/'].PhysicalPath = $otherPath

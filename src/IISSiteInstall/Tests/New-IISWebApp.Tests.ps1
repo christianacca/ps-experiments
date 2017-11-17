@@ -298,7 +298,6 @@ Describe 'New-IISWebApp' {
 
         It 'Should NOT have created file path' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
             $expectedPhysicalPath = "$sitePath$($appName.Replace('/', '\'))"
             $expectedPhysicalPath | Should -Not -Exist
         }

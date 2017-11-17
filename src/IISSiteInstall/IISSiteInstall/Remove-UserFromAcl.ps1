@@ -21,7 +21,7 @@ function Remove-UserFromAcl {
     process {
         try {
 
-            if ($PSCmdlet.ShouldProcess($Path, "Removing user '$Username'")) {
+            if ($PSCmdlet.ShouldProcess($Path, "Remove user '$Username'")) {
                 
                 
                 # note: Where-Object we're ignoring errors. In essence we are skipping any user object

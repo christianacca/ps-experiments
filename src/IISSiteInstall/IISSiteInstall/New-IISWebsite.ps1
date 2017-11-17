@@ -77,8 +77,8 @@ function New-IISWebsite {
                 throw "Site already exists. To overwrite you must supply -Force"
             }
 
-            $sitePathExists = Test-Path $Path
-            if (!$sitePathExists -and $PSCmdlet.ShouldProcess($Path, 'Creating Website physical path')) {
+            $isPathExists = Test-Path $Path
+            if (!$isPathExists -and $PSCmdlet.ShouldProcess($Path, 'Create Web Site physical path')) {
                 New-Item $Path -ItemType Directory -WhatIf:$false | Out-Null
             }
 
@@ -92,7 +92,7 @@ function New-IISWebsite {
     
                 New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false
     
-                if ($PSCmdlet.ShouldProcess($Name, 'Creating Website')) {
+                if ($PSCmdlet.ShouldProcess($Name, 'Create Web Site')) {
                     $bindingInfo = "*:$($Port):$($HostName)"
                     [Microsoft.Web.Administration.Site] $site = New-IISSite $Name $Path $bindingInfo $Protocol -Passthru
                     $site.Applications["/"].ApplicationPoolName = $AppPoolName
@@ -109,7 +109,7 @@ function New-IISWebsite {
                 Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
-            if ($WhatIfPreference -eq $true -and !$sitePathExists) {
+            if ($WhatIfPreference -eq $true -and !$isPathExists) {
                 # Set-CaccaIISSiteAcl requires path to exist
             }
             else {
@@ -124,9 +124,7 @@ function New-IISWebsite {
                 Set-CaccaIISSiteAcl @siteAclParams -WhatIf:$WhatIfPreference
             }
 
-            if ($PassThru -and $WhatIfPreference -eq $false) {
-                Get-IISSite $Name
-            }
+            Get-IISSite $Name
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
