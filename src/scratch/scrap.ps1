@@ -9,9 +9,12 @@ $child2Path = "C:\inetpub\sites\$testSiteName\MyApp2"
 $testAppPoolName = "$testSiteName-AppPool"
 $testAppPoolUsername = "IIS AppPool\$testAppPoolName"
 
-[Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite Scrap C:\inetpub\sites\Scrap -PassThru
-New-Item $childPath, $child2Path  -ItemType Directory -Force | Out-Null
+[Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite Scrap -PassThru -Force
+$root = $site.Applications['/'].VirtualDirectories['/']
+
+# New-Item $childPath, $child2Path  -ItemType Directory -Force | Out-Null
 Start-IISCommitDelay
+New-CaccaIISWebApp $testSiteName MyApp
 $app = $site.Applications.Add('/MyApp1', $childPath)
 $app.ApplicationPoolName = $testAppPoolName
 $app2 = $site.Applications.Add('/MyApp2', $child2Path)

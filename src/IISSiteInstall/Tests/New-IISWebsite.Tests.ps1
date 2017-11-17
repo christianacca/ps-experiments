@@ -37,8 +37,8 @@ Describe 'New-IISWebsite' {
         $binding = $site.Bindings[0]
         $binding.Protocol | Should -Be 'http'
         $binding.EndPoint.Port | Should -Be 80
-        $site.Applications["/"].ApplicationPoolName | Should -Be $testAppPoolName
-        $site.Applications["/"].VirtualDirectories["/"].PhysicalPath | Should -Be $tempSitePath
+        $site.Applications['/'].ApplicationPoolName | Should -Be $testAppPoolName
+        $site.Applications['/'].VirtualDirectories['/'].PhysicalPath | Should -Be $tempSitePath
         $identities = (Get-Acl $tempSitePath).Access.IdentityReference
         $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
     }

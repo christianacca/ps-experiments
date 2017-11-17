@@ -35,9 +35,6 @@ function Get-IISSiteAclPathCoreInfo {
                 $siteInfo = $siteInfos | Where-Object Site_Name -eq $siteName
                 $otherSiteInfos = $allSiteInfos | Where-Object Site_Name -ne $siteName
 
-                $appPoolUsernames = @()
-                $appPoolUsernames += $siteInfo | Select-Object -Exp AppPool_Username | Select -Unique
-    
                 $candidatePaths = @()
     
                 $sitePaths = @()
@@ -68,7 +65,9 @@ function Get-IISSiteAclPathCoreInfo {
     
                 $candidatePaths += $uniqueSitePaths
                 $candidatePaths += $tempAspNetFilesPaths
-    
+
+                $appPoolUsernames = @()
+                $appPoolUsernames += $siteInfo | Select-Object -Exp AppPool_Username | Select -Unique
                 foreach ($username in $appPoolUsernames) {
                     $candidatePaths | ForEach-Object {
                         $path = $_
