@@ -31,9 +31,9 @@ Describe 'New-IISWebsite' {
         Cleanup
     }
 
-    It "-Path" {
+    It "With defaults" {
         # when
-        New-CaccaIISWebsite $testSiteName $tempSitePath
+        New-CaccaIISWebsite $testSiteName
 
         # then
         [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
@@ -42,19 +42,21 @@ Describe 'New-IISWebsite' {
         $binding.Protocol | Should -Be 'http'
         $binding.EndPoint.Port | Should -Be 80
         $site.Applications['/'].ApplicationPoolName | Should -Be $testAppPoolName
-        $site.Applications['/'].VirtualDirectories['/'].PhysicalPath | Should -Be $tempSitePath
-        $identities = (Get-Acl $tempSitePath).Access.IdentityReference
+        $site.Applications["/"].VirtualDirectories["/"].PhysicalPath | Should -Be $sitePath
+        $identities = (Get-Acl $sitePath).Access.IdentityReference
         $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
     }
 
-    It "No Path" {
+    It "-Path" {
         # when
-        New-CaccaIISWebsite $testSiteName
+        New-CaccaIISWebsite $testSiteName $tempSitePath
 
         # then
         [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
         $site | Should -Not -BeNullOrEmpty
-        $site.Applications["/"].VirtualDirectories["/"].PhysicalPath | Should -Be $sitePath
+        $site.Applications['/'].VirtualDirectories['/'].PhysicalPath | Should -Be $tempSitePath
+        $identities = (Get-Acl $tempSitePath).Access.IdentityReference
+        $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
     }
 
     It "-SiteConfig" {

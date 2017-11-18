@@ -25,6 +25,8 @@ Describe 'New-IISWebApp' {
             $appName = 'MyApp'
             # when
             New-CaccaIISWebApp $testSiteName $appName
+
+            $app = (Get-IISSite $testSiteName).Applications["/$appName"]
         }
     
         AfterAll {
@@ -33,13 +35,11 @@ Describe 'New-IISWebApp' {
 
         It 'Should have created child app' {
             # then
-            $site = Get-IISSite $testSiteName
-            $site.Applications["/$appName"] | Should -Not -BeNullOrEmpty
+            $app | Should -Not -BeNullOrEmpty
         }
 
         It 'Should set physical path to be a subfolder of site' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications["/$appName"]
             $expectedPhysicalPath = "$sitePath\$appName"
             $expectedPhysicalPath | Should -Exist
             $app.VirtualDirectories["/"].PhysicalPath | Should -Be $expectedPhysicalPath
@@ -47,13 +47,12 @@ Describe 'New-IISWebApp' {
 
         It 'Should use the site AppPool' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications["/$appName"]
             $app.ApplicationPoolName | Should -Be $testAppPoolName
         }
         
         It 'Should assign file permissions to the physical app path' {
             # then
-            $physicalPath = (Get-IISSite $testSiteName).Applications["/$appName"].VirtualDirectories["/"].PhysicalPath
+            $physicalPath = $app.VirtualDirectories["/"].PhysicalPath
             $identities = (Get-Acl $physicalPath).Access.IdentityReference
             $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
         }
@@ -65,6 +64,8 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName
+
+            $app = (Get-IISSite $testSiteName).Applications[$appName]
         }
     
         AfterAll {
@@ -73,13 +74,11 @@ Describe 'New-IISWebApp' {
 
         It 'Should have created child app with name supplied' {
             # then
-            $site = Get-IISSite $testSiteName
-            $site.Applications[$appName] | Should -Not -BeNullOrEmpty
+            $app | Should -Not -BeNullOrEmpty
         }
 
         It 'Should set physical path to be a subfolder of site' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
             $expectedPhysicalPath = "$sitePath$($appName.Replace('/', '\'))"
             $expectedPhysicalPath | Should -Exist
             $app.VirtualDirectories["/"].PhysicalPath | Should -Be $expectedPhysicalPath
@@ -94,6 +93,8 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName $appPhysicalPath
+
+            $app = (Get-IISSite $testSiteName).Applications[$appName]
         }
     
         AfterAll {
@@ -102,7 +103,6 @@ Describe 'New-IISWebApp' {
 
         It 'Should use physical path supplied' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
             $appPhysicalPath | Should -Exist
             $app.VirtualDirectories["/"].PhysicalPath | Should -Be $appPhysicalPath
         }
@@ -117,6 +117,8 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName $appPhysicalPath
+            
+            $app = (Get-IISSite $testSiteName).Applications[$appName]
         }
     
         AfterAll {
@@ -125,7 +127,6 @@ Describe 'New-IISWebApp' {
 
         It 'Should use physical path supplied' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
             $app.VirtualDirectories["/"].PhysicalPath | Should -Be $appPhysicalPath
         }
     }
@@ -142,6 +143,8 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName
+
+            $app = (Get-IISSite $testSiteName).Applications[$appName]
         }
     
         AfterAll {
@@ -150,7 +153,6 @@ Describe 'New-IISWebApp' {
 
         It 'Should assign existing pool supplied' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
             $app.ApplicationPoolName | Should -Be $appPoolName
         }
 
@@ -170,6 +172,8 @@ Describe 'New-IISWebApp' {
 
             # when
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName
+
+            $app = (Get-IISSite $testSiteName).Applications[$appName]
         }
     
         AfterAll {
@@ -183,7 +187,6 @@ Describe 'New-IISWebApp' {
 
         It 'Should assign new pool to Web application' {
             # then
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
             $app.ApplicationPoolName | Should -Be $appPoolName
         }
     }
