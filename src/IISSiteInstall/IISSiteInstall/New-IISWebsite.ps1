@@ -37,9 +37,7 @@ function New-IISWebsite {
         [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
 
-        [switch] $Force,
-
-        [switch] $PassThru
+        [switch] $Force
     )
     
     begin {
@@ -90,7 +88,7 @@ function New-IISWebsite {
 
             try {
     
-                New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false
+                New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false | Out-Null
     
                 if ($PSCmdlet.ShouldProcess($Name, 'Create Web Site')) {
                     $bindingInfo = "*:$($Port):$($HostName)"

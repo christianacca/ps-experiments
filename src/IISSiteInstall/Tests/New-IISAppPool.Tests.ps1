@@ -16,7 +16,7 @@ Describe 'New-IISAppPool' {
     It "Can create with sensible defaults" {
 
         # when
-        [Microsoft.Web.Administration.ApplicationPool] $pool = New-CaccaIISAppPool $tempAppPool -PassThru -Commit:$false
+        [Microsoft.Web.Administration.ApplicationPool] $pool = New-CaccaIISAppPool $tempAppPool -Commit:$false
 
         # then
         $pool.Enable32BitAppOnWin64 | Should -Be $true
@@ -26,7 +26,7 @@ Describe 'New-IISAppPool' {
     It "Can override defaults in config script block" {
         
         # when
-        $pool = New-CaccaIISAppPool $tempAppPool -PassThru -Commit:$false -Config {
+        $pool = New-CaccaIISAppPool $tempAppPool -Commit:$false -Config {
             $_.Enable32BitAppOnWin64 = $false
         }
         

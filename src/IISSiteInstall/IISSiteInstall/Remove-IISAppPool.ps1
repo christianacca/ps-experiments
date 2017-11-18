@@ -1,11 +1,14 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISAppPool {
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Name')]
     param (
-        [Parameter(Mandatory, ValueFromPipeline)]
+        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Name', Position = 0)]
         [ValidateNotNullOrEmpty()]
         [string] $Name,
+
+        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Object', Position = 0)]
+        [Microsoft.Web.Administration.ApplicationPool] $InputObject,
 
         [switch] $Force,
 
@@ -36,11 +39,16 @@ function Remove-IISAppPool {
             
             [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
 
-            $pool = $manager.ApplicationPools[$Name]
-            
-            if (!$pool) {
-                throw "Cannot delete AppPool, '$Name' does not exist"
+            $pool = if ($InputObject) {
+                $InputObject
             }
+            else {
+                $instance = $manager.ApplicationPools[$Name]
+                if (!$instance) {
+                    throw "Cannot delete AppPool, '$Name' does not exist"
+                }
+                $instance
+            }            
 
             $inUse = $existingSiteInfo | Where-Object AppPool_Name -eq $Name
             if ($inUse) {

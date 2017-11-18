@@ -11,8 +11,6 @@ function New-IISAppPool {
         [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $Config,
 
-        [switch] $PassThru,
-
         [switch] $Force,
 
         [switch] $Commit
@@ -46,23 +44,18 @@ function New-IISAppPool {
                 Start-IISCommitDelay
             }
             try {
-                if ($existingPool) {
-                    if ($PSCmdlet.ShouldProcess($Name, 'Remove existing App pool')) {
-                        $manager.ApplicationPools.Remove($existingPool)
-                    }
+                if ($existingPool -and $PSCmdlet.ShouldProcess($Name, 'Remove App pool')) {
+                    # note: not using Remove-IISAppPool as do NOT want to remove file permissions
+                    $manager.ApplicationPools.Remove($existingPool)
                 }
 
                 if ($PSCmdlet.ShouldProcess($Name, 'Create App pool')) {
                     [Microsoft.Web.Administration.ApplicationPool] $pool = $manager.ApplicationPools.Add($Name)
-                    $pool.ManagedPipelineMode = "Integrated"
-                    $pool.ManagedRuntimeVersion = "v4.0"
+                    # todo: do NOT set this when it's detected that OS is 64bit onlys
                     $pool.Enable32BitAppOnWin64 = $true # this IS the recommended default even for 64bit servers
-                    $pool.AutoStart = $true
-                    $pool | ForEach-Object $Config
 
-                    if ($PassThru) {
-                        $pool
-                    }
+                    $pool | ForEach-Object $Config
+                    $pool
                 }
                 if ($Commit) {
                     Stop-IISCommitDelay

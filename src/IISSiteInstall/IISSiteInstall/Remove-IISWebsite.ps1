@@ -29,9 +29,7 @@ function Remove-IISWebsite {
 
             Start-IISCommitDelay
             try {
-                if ($PSCmdlet.ShouldProcess($Name, 'Remove IIS Website')) {
-                    Remove-IISSite $Name -Confirm:$false
-                }
+                Remove-IISSite $Name -Confirm:$false
 
                 if ($WhatIfPreference -ne $true) {
                     # note: skipping errors when deleting app pool when that pool is shared by other sites
