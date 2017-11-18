@@ -65,7 +65,7 @@ Describe 'Remove-IISWebsite' {
             # when
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
 
-            New-IISSite $testSiteName $TestDrive '*:2222:' -Passthru | Should -Not -BeNullOrEmpty
+            New-IISSite $testSiteName $TestDrive '*:2222:' -EA Stop -Passthru | Should -Not -BeNullOrEmpty
         }
 
         It 'Should remove App pool file permissions' {
@@ -86,7 +86,7 @@ Describe 'Remove-IISWebsite' {
         BeforeAll {
             Cleanup
 
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -PassThru
+            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
             Start-IISCommitDelay
             New-CaccaIISAppPool $childAppPool -Commit:$false
             $app = $site.Applications.Add('/MyApp1', (Join-Path $TestDrive 'MyApp1'))
@@ -116,7 +116,7 @@ Describe 'Remove-IISWebsite' {
 
             $childPath = "$TestDrive\MyApp1"
             New-Item $childPath -ItemType Directory
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $test2AppPool -PassThru
+            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $test2AppPool
             Start-IISCommitDelay
             New-CaccaIISAppPool $testAppPool -Commit:$false
             $app = $site.Applications.Add('/MyApp1', $childPath)

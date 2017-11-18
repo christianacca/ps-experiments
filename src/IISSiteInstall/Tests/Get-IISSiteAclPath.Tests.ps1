@@ -82,7 +82,7 @@ Describe 'Get-IISSiteAclPath' {
             $childPath = "$TestDrive\MyApp1"
             $child2Path = "$TestDrive\MyApp2"
 
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -PassThru
+            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
             New-Item $childPath, $child2Path  -ItemType Directory
             Start-IISCommitDelay
             $app = $site.Applications.Add('/MyApp1', $childPath)
@@ -234,7 +234,7 @@ Describe 'Get-IISSiteAclPath' {
 
             New-CaccaIISAppPool 'AnotherPool' -Force
             Reset-IISServerManager -Confirm:$false
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -PassThru
+            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
             New-Item $childPath, $child2Path  -ItemType Directory
             Start-IISCommitDelay
             $app = $site.Applications.Add('/MyApp1', $childPath)

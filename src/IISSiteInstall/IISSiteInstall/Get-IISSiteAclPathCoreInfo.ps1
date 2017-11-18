@@ -71,7 +71,6 @@ function Get-IISSiteAclPathCoreInfo {
                 foreach ($username in $appPoolUsernames) {
                     $candidatePaths | ForEach-Object {
                         $path = $_
-                        Write-Verbose "Candidate path: '$path'"
                         $select = @(
                             @{n = 'SiteName'; e = {$siteName}},
                             @{n = 'Path'; e = {$path}}, 

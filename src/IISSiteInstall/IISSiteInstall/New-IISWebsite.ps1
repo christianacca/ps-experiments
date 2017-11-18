@@ -45,7 +45,7 @@ function New-IISWebsite {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 
-        Import-Module IISSecurity -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'        
+        # Import-Module IISSecurity -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'        
 
         if ([string]::IsNullOrWhiteSpace($Path)) {
             $Path = "C:\inetpub\sites\$Name"

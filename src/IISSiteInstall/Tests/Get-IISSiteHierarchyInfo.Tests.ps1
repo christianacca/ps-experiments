@@ -106,7 +106,7 @@ Describe 'Get-IISSiteHierarchyInfo' {
 
         BeforeAll {
 
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -PassThru
+            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
             Start-IISCommitDelay
             $app = $site.Applications.Add('/MyApp1', (Join-Path $TestDrive 'MyApp1'))
             $app.ApplicationPoolName = $tempAppPool

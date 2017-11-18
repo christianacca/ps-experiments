@@ -6,8 +6,18 @@ Import-Module $modulePath
 
 $testSiteName = 'DeleteMeSite5'
 $testAppPoolName = "$testSiteName-AppPool"
+$testAppPoolUsername = "IIS AppPool\$testSiteName-AppPool"
 
 Describe 'Remove-IISWebApp' {
+
+    function GetAppPoolPermission {
+        param(
+            [string] $Path,
+            [string] $Username
+        )
+        (Get-Item $Path).GetAccessControl('Access').Access |
+            Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $Username }
+    }
 
     BeforeAll {
         Reset-IISServerManager -Confirm:$false
@@ -49,11 +59,17 @@ Describe 'Remove-IISWebApp' {
             Get-IISAppPool $testAppPoolName | Should -Not -BeNullOrEmpty
         }
 
-        # It 'ServerManager should be reset after delete' {
-        #     # then
-        #     # note: this will throw if the ServerManager was NOT refreshed
-        #     New-CaccaIISWebApp $testSiteName $appName -Passthru | Should -Not -BeNullOrEmpty
-        # }
+        It 'Should remove file permissions to Web app path' {
+            # then
+            GetAppPoolPermission "$sitePath\$appName" $testAppPoolUsername | Should -BeNullOrEmpty
+        }
+
+        It 'Should NOT remove file permissions to Temp ASP.Net files folder' {
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $testAppPoolUsername | Should -Not -BeNullOrEmpty
+            }
+        }
     }
 
     Context 'Non-Shared app pool' {
@@ -61,6 +77,7 @@ Describe 'Remove-IISWebApp' {
         BeforeAll {
             # given
             $appPoolName = 'NonSharedPool'
+            $appPoolUsername = "IIS AppPool\$appPoolName"
             $appName = 'MyApp'
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName
         
@@ -76,6 +93,18 @@ Describe 'Remove-IISWebApp' {
         It 'Should remove apppool' {
             # then
             Get-IISAppPool $appPoolName -WA SilentlyContinue | Should -BeNullOrEmpty
+        }
+
+        It 'Should remove file permissions to Web app path' {
+            # then
+            GetAppPoolPermission "$sitePath\$appName" $appPoolUsername | Should -BeNullOrEmpty
+        }
+
+        It 'Should remove file permissions to Temp ASP.Net files folder' {
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $appPoolUsername | Should -BeNullOrEmpty
+            }
         }
     }
 }
