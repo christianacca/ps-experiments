@@ -8,8 +8,6 @@ function Get-IISSiteAclPath {
         [ValidateNotNullOrEmpty()]
         [string] $Name,
 
-        [switch] $ExcludeShared,
-
         [switch] $Recurse
     )
     

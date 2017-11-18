@@ -6,8 +6,18 @@ Import-Module $modulePath
 
 $testSiteName = 'DeleteMeSite'
 $tempAppPool = 'TestAppPool'
+$tempAppPoolUsername = "IIS AppPool\$tempAppPool"
 
 Describe 'Remove-IISAppPool' {
+
+    function GetAppPoolPermission {
+        param(
+            [string] $Path,
+            [string] $Username
+        )
+        (Get-Item $Path).GetAccessControl('Access').Access |
+            Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $Username }
+    }
 
     AfterEach {
         Reset-IISServerManager -Confirm:$false
@@ -40,7 +50,7 @@ Describe 'Remove-IISAppPool' {
     }
 
     Context 'Existing pool in use by Web app' {
-        
+
         function Cleanup {
             Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
@@ -60,8 +70,27 @@ Describe 'Remove-IISAppPool' {
         }
     
         It '-Force should allow delete' {
+            # we need to work with SID's rather than friendly usernames, as friendly names are not available once
+            # app pool is deleted
+            $appPoolSid = (GetAppPoolPermission $TestDrive $tempAppPoolUsername).IdentityReference | % {
+                $_.Translate([System.Security.Principal.SecurityIdentifier]).Value
+            }
+
+            # when
             Remove-CaccaIISAppPool $tempAppPool -Force
+
+            # then
             Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
+            GetAppPoolPermission $TestDrive $appPoolSid | Should -BeNullOrEmpty
+        }
+
+        It '-WhatIf should make no modifications' {
+            # when
+            Remove-CaccaIISAppPool $tempAppPool -Force -WhatIf
+
+            # then
+            Get-IISAppPool $tempAppPool | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $TestDrive $tempAppPoolUsername | Should -Not -BeNullOrEmpty
         }
     }
 }

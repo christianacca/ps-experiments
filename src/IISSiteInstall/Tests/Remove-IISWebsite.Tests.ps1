@@ -58,6 +58,7 @@ Describe 'Remove-IISWebsite' {
             # then
             Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
             Get-IISAppPool $testAppPool | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -Not -BeNullOrEmpty
         }
 
         It 'ServerManager should be reset after delete' {

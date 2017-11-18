@@ -120,7 +120,7 @@ function New-IISWebsite {
                     ExecutePaths  = $ExecutePaths
                     SiteShellOnly = $SiteShellOnly
                 }
-                # note: we should NOT have to explicitly 'pass' preference (bug in PS?)
+                # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
                 Set-CaccaIISSiteAcl @siteAclParams -WhatIf:$WhatIfPreference
             }
 

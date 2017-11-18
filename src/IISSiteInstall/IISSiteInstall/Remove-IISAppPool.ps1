@@ -21,9 +21,12 @@ function Remove-IISAppPool {
             $Commit = $true
         }
 
+        $sitesAclPaths = Get-IISSiteAclPath
+
         $existingSiteInfo = if ($Force) {
             @()
-        } else {
+        }
+        else {
             Get-IISSiteHierarchyInfo
         }
     }
@@ -33,19 +36,28 @@ function Remove-IISAppPool {
             
             [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
 
+            $pool = $manager.ApplicationPools[$Name]
+            
+            if (!$pool) {
+                throw "Cannot delete AppPool, '$Name' does not exist"
+            }
+
+            $inUse = $existingSiteInfo | Where-Object AppPool_Name -eq $Name
+            if ($inUse) {
+                throw "Cannot delete AppPool, '$Name' is used by one or more Web applications/sites"
+            }
+
+            if ($pool.ProcessModel.IdentityType -eq 'ApplicationPoolIdentity') {
+                $appPoolUsername = Get-IISAppPoolUsername $pool
+                # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
+                $sitesAclPaths | Where-Object IdentityReference -eq $appPoolUsername | 
+                    Remove-CaccaUserFromAcl -WhatIf:$WhatIfPreference
+            }
+
             if ($Commit) {
                 Start-IISCommitDelay
             }
             try {
-                $pool = $manager.ApplicationPools[$Name]
-                
-                if (!$pool) {
-                    throw "Cannot delete AppPool, '$Name' does not exist"
-                }
-                $inUse = $existingSiteInfo | Where-Object AppPool_Name -eq $Name
-                if ($inUse) {
-                    throw "Cannot delete AppPool, '$Name' is used by one or more Web applications/sites"
-                }
 
                 if ($PSCmdlet.ShouldProcess($Name, 'Remove App pool')) {
                     $manager.ApplicationPools.Remove($pool)
