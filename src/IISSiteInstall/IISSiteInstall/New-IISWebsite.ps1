@@ -23,10 +23,10 @@ function New-IISWebsite {
         [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $SiteConfig,
 
-        [Parameter(ValueFromPipeline)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [string[]] $ModifyPaths,
 
-        [Parameter(ValueFromPipeline)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [string[]] $ExecutePaths,
 
         [switch] $SiteShellOnly,

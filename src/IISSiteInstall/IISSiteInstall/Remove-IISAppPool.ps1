@@ -57,8 +57,17 @@ function Remove-IISAppPool {
 
             if ($pool.ProcessModel.IdentityType -eq 'ApplicationPoolIdentity') {
                 $appPoolUsername = Get-IISAppPoolUsername $pool
+                $allAclPaths = @()
+                $allAclPaths += $sitesAclPaths
+                $allAclPaths += Get-CaccaTempAspNetFilesPaths | ForEach-Object {
+                    [PsCustomObject] @{
+                        Path = $_
+                        IdentityReference = $appPoolUsername
+                    }
+                }
+
                 # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
-                $sitesAclPaths | Where-Object IdentityReference -eq $appPoolUsername | 
+                $allAclPaths | Where-Object IdentityReference -eq $appPoolUsername | 
                     Remove-CaccaUserFromAcl -WhatIf:$WhatIfPreference
             }
 

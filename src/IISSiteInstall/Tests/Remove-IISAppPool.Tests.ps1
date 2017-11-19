@@ -29,15 +29,36 @@ Describe 'Remove-IISAppPool' {
 
     Context 'Existing pool (not in use)' {
         BeforeEach {
-            New-CaccaIISAppPool $tempAppPool -Commit:$false
+            # given
+            New-CaccaIISAppPool $tempAppPool
+            Get-CaccaTempAspNetFilesPaths | % {
+                icacls ("$_") /grant:r ("$tempAppPoolUsername" + ':(OI)(CI)R') | Out-Null
+            }
+
+            # we need to work with SID's rather than friendly usernames, as friendly names are not available once
+            # app pool is deleted
+            $tempAspFilePath = (Get-CaccaTempAspNetFilesPaths)[0]
+            $appPoolSid = (GetAppPoolPermission $tempAspFilePath $tempAppPoolUsername).IdentityReference | % {
+                $_.Translate([System.Security.Principal.SecurityIdentifier]).Value
+            }
         }
 
         It 'Should delete pool' {
             # when
-            Remove-CaccaIISAppPool $tempAppPool -Commit:$false
+            Remove-CaccaIISAppPool $tempAppPool
 
             # then
             Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
+        }
+
+        It 'Should remove file permissions to Temp ASP.Net files folders' {
+            # when
+            Remove-CaccaIISAppPool $tempAppPool
+
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $appPoolSid | Should -BeNullOrEmpty
+            }
         }
 
         It '-WhatIf should make no modifications' {
@@ -46,6 +67,12 @@ Describe 'Remove-IISAppPool' {
 
             # then
             Get-IISAppPool $tempAppPool | Should -Not -BeNullOrEmpty
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $tempAppPoolUsername | Should -Not -BeNullOrEmpty
+            }
+
+            # cleanup
+            Remove-CaccaIISAppPool $tempAppPool
         }
     }
 
@@ -82,6 +109,9 @@ Describe 'Remove-IISAppPool' {
             # then
             Get-IISAppPool $tempAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
             GetAppPoolPermission $TestDrive $appPoolSid | Should -BeNullOrEmpty
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $appPoolSid | Should -BeNullOrEmpty
+            }
         }
 
         It '-WhatIf should make no modifications' {

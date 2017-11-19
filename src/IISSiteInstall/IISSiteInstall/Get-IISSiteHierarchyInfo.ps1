@@ -4,8 +4,11 @@
 function Get-IISSiteHierarchyInfo {
     [CmdletBinding()]
     param (
-        [Parameter(ValueFromPipeline)]
-        [string] $Name
+        [Parameter(ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [string] $Name,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string] $AppName
     )
     
     begin {
@@ -25,8 +28,13 @@ function Get-IISSiteHierarchyInfo {
                 }
             }
 
+            if (![string]::IsNullOrWhiteSpace($AppName) -and !$AppName.StartsWith('/')) {
+                $AppName = '/' + $AppName
+            }
+
             Get-IISSite @siteParams -PV site -WA SilentlyContinue |
                 Select-Object -Exp Applications -PV app |
+                Where-Object { !$AppName -or $_.Path -eq $AppName } |
                 ForEach-Object {
                     $existingPool = Get-IISAppPool -Name $_.ApplicationPoolName -WA SilentlyContinue
                     if (!$existingPool) {

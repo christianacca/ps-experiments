@@ -41,8 +41,15 @@ function Remove-IISWebApp {
                 return
             }
 
-            Start-IISCommitDelay
+            $aclInfo = @{
+                AppPath             = $app.VirtualDirectories['/'].PhysicalPath
+                AppPoolName         = $app.ApplicationPoolName
+                SkipTempAspNetFiles = $true
+            }
+            # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
+            Remove-CaccaIISSiteAcl @aclInfo -WhatIf:$WhatIfPreference
 
+            Start-IISCommitDelay
             try {
 
                 if ($PSCmdlet.ShouldProcess("$SiteName$Name", 'Remove Web Application')) {
@@ -57,6 +64,7 @@ function Remove-IISWebApp {
                 Stop-IISCommitDelay
             }
             catch {
+                Write-Debug "Remove-IISWebApp: error thrown '$_'"
                 Stop-IISCommitDelay -Commit:$false
                 throw
             }
@@ -67,8 +75,5 @@ function Remove-IISWebApp {
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
-    }
-
-    end {
     }
 }

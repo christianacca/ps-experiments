@@ -71,7 +71,9 @@ function Remove-IISSiteAcl {
         [ValidateNotNull()]
         [string[]] $ExecutePaths = @(),
         
-        [switch] $SiteShellOnly
+        [switch] $SiteShellOnly,
+
+        [switch] $SkipTempAspNetFiles
     )
     begin {
         Set-StrictMode -Version Latest
@@ -90,11 +92,12 @@ function Remove-IISSiteAcl {
             }
 
             $paths = @{
-                SitePath      = $SitePath
-                AppPath       = $AppPath
-                ModifyPaths   = $ModifyPaths
-                ExecutePaths  = $ExecutePaths
-                SiteShellOnly = $SiteShellOnly
+                SitePath            = $SitePath
+                AppPath             = $AppPath
+                ModifyPaths         = $ModifyPaths
+                ExecutePaths        = $ExecutePaths
+                SiteShellOnly       = $SiteShellOnly
+                SkipTempAspNetFiles = $SkipTempAspNetFiles
             }
             $permissions = Get-IISSiteDesiredAcl @paths
 

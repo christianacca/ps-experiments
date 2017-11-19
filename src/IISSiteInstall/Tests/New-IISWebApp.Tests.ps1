@@ -9,6 +9,15 @@ $testAppPoolName = "$testSiteName-AppPool"
 
 Describe 'New-IISWebApp' {
 
+    function GetAppPoolPermission {
+        param(
+            [string] $Path,
+            [string] $Username
+        )
+        (Get-Item $Path).GetAccessControl('Access').Access |
+            Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $Username }
+    }
+
     BeforeAll {
         # given
         $sitePath = "$TestDrive\$testSiteName"
@@ -53,8 +62,7 @@ Describe 'New-IISWebApp' {
         It 'Should assign file permissions to the physical app path' {
             # then
             $physicalPath = $app.VirtualDirectories["/"].PhysicalPath
-            $identities = (Get-Acl $physicalPath).Access.IdentityReference
-            $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $physicalPath "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
         }
     }
 

@@ -22,10 +22,10 @@ function New-IISWebApp {
         [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
 
-        [Parameter(ValueFromPipeline)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [string[]] $ModifyPaths,
 
-        [Parameter(ValueFromPipeline)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [string[]] $ExecutePaths,
 
         [switch] $Force
@@ -41,6 +41,13 @@ function New-IISWebApp {
 
         if (!$Name.StartsWith('/')) {
             $Name = '/' + $Name
+        }
+
+        if ($ModifyPaths -eq $null) {
+            $ModifyPaths = @()
+        }
+        if ($ExecutePaths -eq $null) {
+            $ExecutePaths = @()
         }
     }
     
@@ -66,7 +73,8 @@ function New-IISWebApp {
             $childPath = if ([string]::IsNullOrWhiteSpace($Path)) {
                 $sitePath = $rootApp.VirtualDirectories['/'].PhysicalPath
                 Join-Path $sitePath $Name
-            } else {
+            }
+            else {
                 $Path
             }
             
@@ -108,13 +116,24 @@ function New-IISWebApp {
                 Reset-IISServerManager -Confirm:$false -WhatIf:$false
             }
 
+            if ($WhatIfPreference -eq $true -and !$isPathExists) {
+                # Set-CaccaIISSiteAcl requires path to exist
+            }
+            else {
+                $appAclParams = @{
+                    AppPath      = $childPath
+                    AppPoolName  = $AppPoolName
+                    ModifyPaths  = $ModifyPaths
+                    ExecutePaths = $ExecutePaths
+                }
+                # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
+                Set-CaccaIISSiteAcl @appAclParams -WhatIf:$WhatIfPreference
+            }
+
             (Get-IISSite $SiteName).Applications[$Name]
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
-    }
-
-    end {
     }
 }

@@ -80,7 +80,13 @@ Describe 'Remove-IISWebApp' {
             $appPoolUsername = "IIS AppPool\$appPoolName"
             $appName = 'MyApp'
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName
-        
+
+            # we need to work with SID's rather than friendly usernames, as friendly names are not available once
+            # app pool is deleted
+            $appPoolSid = (GetAppPoolPermission "$sitePath\$appName" $appPoolUsername).IdentityReference | % {
+                $_.Translate([System.Security.Principal.SecurityIdentifier]).Value
+            }
+
             # when
             Remove-CaccaIISWebApp $testSiteName $appName
         }
@@ -97,13 +103,13 @@ Describe 'Remove-IISWebApp' {
 
         It 'Should remove file permissions to Web app path' {
             # then
-            GetAppPoolPermission "$sitePath\$appName" $appPoolUsername | Should -BeNullOrEmpty
+            GetAppPoolPermission "$sitePath\$appName" $appPoolSid | Should -BeNullOrEmpty
         }
 
         It 'Should remove file permissions to Temp ASP.Net files folder' {
             # then
             Get-CaccaTempAspNetFilesPaths | % {
-                GetAppPoolPermission $_ $appPoolUsername | Should -BeNullOrEmpty
+                GetAppPoolPermission $_ $appPoolSid | Should -BeNullOrEmpty
             }
         }
     }
