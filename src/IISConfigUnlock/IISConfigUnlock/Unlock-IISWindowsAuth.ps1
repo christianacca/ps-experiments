@@ -1,5 +1,3 @@
-#Requires -Version 5.0 -Modules IISAdministration
-
 function Unlock-IISWindowsAuth {
     [CmdletBinding()]
     param (

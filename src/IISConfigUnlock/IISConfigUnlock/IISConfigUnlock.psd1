@@ -51,7 +51,7 @@ PowerShellVersion = '5.0'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-# RequiredModules = @('IISAdministration')
+RequiredModules = @(@{ModuleName='IISAdministration'; ModuleVersion='1.1.0.0'; MaximumVersion = '1.999.0.0';})
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
@@ -112,7 +112,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # External dependent modules of this module
-        # ExternalModuleDependencies = 'IISAdministration'
+        ExternalModuleDependencies = @('IISAdministration')
 
     } # End of PSData hashtable
     

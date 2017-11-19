@@ -1,5 +1,6 @@
 ﻿$projectRoot = Resolve-Path "$PSScriptRoot\.."
-$moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psm1")
+$modulePath = Resolve-Path "$projectRoot\*\*.psd1"
+$moduleRoot = Split-Path $modulePath
 $moduleName = Split-Path $moduleRoot -Leaf
 
 Describe "General project validation: $moduleName" {
@@ -21,5 +22,20 @@ Describe "General project validation: $moduleName" {
 
     It "Module '$moduleName' can import cleanly" {
         {Import-Module (Join-Path $moduleRoot "$moduleName.psm1") -force } | Should Not Throw
+    }
+
+    It 'Module auto-imports dependencies' {
+        # given
+        # dependencies already installed
+        Install-Module IISAdministration -RequiredVersion '1.1.0.0'
+        # Module and it's dependencies not already loaded into memory
+        Get-Module IISAdministration -All | Remove-Module
+        Get-Module $moduleName -All | Remove-Module
+
+        # when
+        Import-Module $modulePath
+
+        # then
+        Get-Module IISAdministration | Should -Not -Be $null
     }
 }
