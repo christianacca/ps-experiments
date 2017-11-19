@@ -1,10 +1,14 @@
 function Set-Something {
     [CmdletBinding()]
     param()
-    process {
+    begin {
         $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+
+        Write-Verbose "Caller ErrorActionPreference: $callerEA"
+    }
+    process {
         try {
-            # $ErrorActionPreference = 'Stop'
             # Get-LocalUser 'nope' -EA Stop
     
             1 / (1 - 1)
@@ -15,6 +19,27 @@ function Set-Something {
         }
     }
 }
+
+function Set-SomethingElse {
+    [CmdletBinding()]
+    param ()
+    
+    begin {
+        $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+    }
+    
+    process {
+        try {
+            Set-Something
+            Write-Host 'Set-SomethingElse... still running'
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+}
+
 Clear-Host
 
 $ErrorActionPreference = 'Continue'
@@ -32,5 +57,7 @@ catch {
     Write-Host "expected error: $_"
 }
 
+Set-SomethingElse -Verbose; Write-Host 'script...still running (4)'
+
 # the error thrown by function IS terminal:
-Set-Something -EA Stop; Write-Host 'script...still running (4)'
+Set-Something -EA Stop; Write-Host 'script...still running (5)'
