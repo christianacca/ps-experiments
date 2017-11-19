@@ -66,9 +66,7 @@ function Remove-IISAppPool {
                     }
                 }
 
-                # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
-                $allAclPaths | Where-Object IdentityReference -eq $appPoolUsername | 
-                    Remove-CaccaUserFromAcl -WhatIf:$WhatIfPreference
+                $allAclPaths | Where-Object IdentityReference -eq $appPoolUsername | Remove-CaccaUserFromAcl
             }
 
             if ($Commit) {

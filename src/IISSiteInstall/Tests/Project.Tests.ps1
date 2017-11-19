@@ -27,9 +27,11 @@ Describe "General project validation: $moduleName" {
     It 'Module auto-imports dependencies' {
         # given
         # dependencies already installed
+        Install-Module PreferenceVariables -RequiredVersion '1.0'
         Install-Module IISSecurity -RequiredVersion '0.1.0'
         Install-Module IISConfigUnlock -RequiredVersion '0.1.0'
         # Module and it's dependencies not already loaded into memory
+        Get-Module PreferenceVariables -All | Remove-Module
         Get-Module IISSecurity -All | Remove-Module
         Get-Module IISConfigUnlock -All | Remove-Module
         Get-Module $moduleName -All | Remove-Module

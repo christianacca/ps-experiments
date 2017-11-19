@@ -126,8 +126,7 @@ function New-IISWebApp {
                     ModifyPaths  = $ModifyPaths
                     ExecutePaths = $ExecutePaths
                 }
-                # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
-                Set-CaccaIISSiteAcl @appAclParams -WhatIf:$WhatIfPreference
+                Set-CaccaIISSiteAcl @appAclParams
             }
 
             (Get-IISSite $SiteName).Applications[$Name]

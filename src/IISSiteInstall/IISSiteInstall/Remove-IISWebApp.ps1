@@ -64,8 +64,7 @@ function Remove-IISWebApp {
                 # cleaning up orphaned file permissions will happen below when 'Remove-IISAppPool' is run
                 SkipTempAspNetFiles = $true
             }
-            # note: we should NOT have to explicitly 'pass' WhatIfPreference or ErrorAction (bug in PS?)
-            Remove-CaccaIISSiteAcl @aclInfo -WhatIf:$WhatIfPreference -EA Stop
+            Remove-CaccaIISSiteAcl @aclInfo
 
             Start-IISCommitDelay
             try {
