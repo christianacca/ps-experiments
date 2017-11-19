@@ -10,7 +10,13 @@ function Remove-IISWebApp {
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [string] $Name
+        [string] $Name,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string[]] $ModifyPaths,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string[]] $ExecutePaths
     )
     
     begin {
@@ -23,6 +29,13 @@ function Remove-IISWebApp {
 
         if (!$Name.StartsWith('/')) {
             $Name = '/' + $Name
+        }
+
+        if ($ModifyPaths -eq $null) {
+            $ModifyPaths = @()
+        }
+        if ($ExecutePaths -eq $null) {
+            $ExecutePaths = @()
         }
     }
     
@@ -44,10 +57,15 @@ function Remove-IISWebApp {
             $aclInfo = @{
                 AppPath             = $app.VirtualDirectories['/'].PhysicalPath
                 AppPoolName         = $app.ApplicationPoolName
+                ModifyPaths         = $ModifyPaths
+                ExecutePaths        = $ExecutePaths
+                SkipMissingPaths    = $true
+                # file permissions for Temp AP.Net Files folders *might* be shared so must skip removing these
+                # cleaning up orphaned file permissions will happen below when 'Remove-IISAppPool' is run
                 SkipTempAspNetFiles = $true
             }
-            # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
-            Remove-CaccaIISSiteAcl @aclInfo -WhatIf:$WhatIfPreference
+            # note: we should NOT have to explicitly 'pass' WhatIfPreference or ErrorAction (bug in PS?)
+            Remove-CaccaIISSiteAcl @aclInfo -WhatIf:$WhatIfPreference -EA Stop
 
             Start-IISCommitDelay
             try {
@@ -64,7 +82,6 @@ function Remove-IISWebApp {
                 Stop-IISCommitDelay
             }
             catch {
-                Write-Debug "Remove-IISWebApp: error thrown '$_'"
                 Stop-IISCommitDelay -Commit:$false
                 throw
             }

@@ -23,9 +23,9 @@ function Remove-IISWebsite {
                 return
             }
 
-            # note: we should NOT have to explicitly 'pass' WhatIfPreference (bug in PS?)
+            # note: we should NOT have to explicitly 'pass' WhatIfPreference and ErrorAction (bug in PS?)
             Get-IISSiteAclPath $Name -Recurse | Where-Object IsShared -eq $false | 
-                Remove-CaccaUserFromAcl -WhatIf:$WhatIfPreference
+                Remove-CaccaUserFromAcl -WhatIf:$WhatIfPreference -EA Stop
 
             Start-IISCommitDelay
             try {

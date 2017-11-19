@@ -72,6 +72,8 @@ function Remove-IISSiteAcl {
         [string[]] $ExecutePaths = @(),
         
         [switch] $SiteShellOnly,
+        
+        [switch] $SkipMissingPaths,
 
         [switch] $SkipTempAspNetFiles
     )
@@ -99,7 +101,7 @@ function Remove-IISSiteAcl {
                 SiteShellOnly       = $SiteShellOnly
                 SkipTempAspNetFiles = $SkipTempAspNetFiles
             }
-            $permissions = Get-IISSiteDesiredAcl @paths
+            $permissions = Get-IISSiteDesiredAcl @paths | Where-Object { $SkipMissingPaths -eq $false -or (Test-Path $_.Path) }
 
             ValidateAclPaths $permissions 'Cannot remove permissions; missing paths detected'
 

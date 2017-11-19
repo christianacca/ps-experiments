@@ -84,7 +84,7 @@ function New-IISWebApp {
             }
 
             if ($existingApp) {
-                Remove-IISWebApp $SiteName $Name
+                Remove-IISWebApp $SiteName $Name -ModifyPaths $ModifyPaths -ExecutePaths $ExecutePaths
             }
 
             # Remove-IISWebApp has just committed changes making our $site instance read-only, therefore fetch another one
