@@ -6,15 +6,15 @@ function Get-MaybeThrow {
     )
     
     begin {
-        Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 
         Write-Host "Get-MaybeThrow.callerEA: $callerEA"
-        Write-Host "Get-MaybeThrow.ErrorActionPreference: $ErrorActionPreference"
+        Write-Host "Get-MaybeThrow.begin.ErrorActionPreference: $ErrorActionPreference"
     }
     
     process {
+        Write-Host "Get-MaybeThrow.process.ErrorActionPreference: $ErrorActionPreference"
         try {
             if ($Name -eq '?') {
                 throw 'Object not found, try another name.'

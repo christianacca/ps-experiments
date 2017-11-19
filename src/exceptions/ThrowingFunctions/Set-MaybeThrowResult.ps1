@@ -8,17 +8,17 @@ function Set-MaybeThrowResult {
     )
     
     begin {
-        Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 
         Write-Host "Set-MaybeThrowResult.callerEA: $callerEA"
-        Write-Host "Set-MaybeThrowResult.ErrorActionPreference: $ErrorActionPreference"
+        Write-Host "Set-MaybeThrowResult.begin.ErrorActionPreference: $ErrorActionPreference"
     }
     
     process {
+        Write-Host "Set-MaybeThrowResult.process.ErrorActionPreference: $ErrorActionPreference"
         try {
-            $value = Get-CaccaMaybeThrowResult $Name
+            $value = Get-MaybeThrowResult $Name
             if ($PassThru) {
                 $value
             }

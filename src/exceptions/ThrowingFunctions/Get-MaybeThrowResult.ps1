@@ -6,14 +6,14 @@ function Get-MaybeThrowResult {
     )
     
     begin {
-        Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
         Write-Host "Get-MaybeThrowResult.callerEA: $callerEA"
-        Write-Host "Get-MaybeThrowResult.ErrorActionPreference: $ErrorActionPreference"
+        Write-Host "Get-MaybeThrowResult.begin.ErrorActionPreference: $ErrorActionPreference"
     }
     
     process {
+        Write-Host "Get-MaybeThrowResult.process.ErrorActionPreference: $ErrorActionPreference"
         try {
             Get-MaybeThrow $Name
             Write-Host 'Get-MaybeThrowResult... still running'
