@@ -12,9 +12,10 @@ function Get-IISSiteAclPath {
     )
     
     begin {
+        Set-StrictMode -Version 'Latest'
+        Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-        Set-StrictMode -Version 'Latest'
 
         $allSiteInfos = @()
         $allSiteInfos += Get-IISSiteAclPathCoreInfo

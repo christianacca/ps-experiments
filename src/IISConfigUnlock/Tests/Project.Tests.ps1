@@ -27,8 +27,10 @@ Describe "General project validation: $moduleName" {
     It 'Module auto-imports dependencies' {
         # given
         # dependencies already installed
+        Install-Module PreferenceVariables -RequiredVersion '1.0'
         Install-Module IISAdministration -RequiredVersion '1.1.0.0'
         # Module and it's dependencies not already loaded into memory
+        Get-Module PreferenceVariables -All | Remove-Module
         Get-Module IISAdministration -All | Remove-Module
         Get-Module $moduleName -All | Remove-Module
 
@@ -36,6 +38,7 @@ Describe "General project validation: $moduleName" {
         Import-Module $modulePath
 
         # then
+        Get-Module PreferenceVariables | Should -Not -Be $null
         Get-Module IISAdministration | Should -Not -Be $null
     }
 }

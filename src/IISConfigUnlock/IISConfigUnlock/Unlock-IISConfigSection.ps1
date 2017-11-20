@@ -16,6 +16,7 @@ function Unlock-IISConfigSection {
     
     begin {
         Set-StrictMode -Version Latest
+        Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 

@@ -11,9 +11,9 @@ function Get-IISSiteAclPathCoreInfo {
     )
     
     begin {
+        Set-StrictMode -Version 'Latest'
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-        Set-StrictMode -Version 'Latest'
 
         $allSiteInfos = Get-IISSiteHierarchyInfo
         $tempAspNetFilesPaths = Get-CaccaTempAspNetFilesPaths
