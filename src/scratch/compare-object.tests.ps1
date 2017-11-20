@@ -38,7 +38,7 @@ Describe "Compare-Object" {
         $results | Should -Not -BeNullOrEmpty
     }
 
-    It "Different property value - nice output" {
+    It "Different property value - nice output" -Skip {
         $actual = [PsCustomObject] @{
             File = 'C:\Scrap'
             Permission = 'R'

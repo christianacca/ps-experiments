@@ -20,9 +20,6 @@ function Set-IISSiteAcl {
     .PARAMETER AppPath
     The physical Web application path. A path relative to SitePath can be supplied. Defaults to SitePath
 
-    .PARAMETER AppPoolName
-    The name of the AppPool that will be used to derive the User account to grant permissions for
-
     .PARAMETER AppPoolUsername
     The name of a specific User account whose permissions are to be granted
 
@@ -40,7 +37,7 @@ function Set-IISSiteAcl {
     Grant site file permissions to AppPoolIdentity
 
     .EXAMPLE
-    Set-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolName 'MyWebApp1-AppPool'
+    Set-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolUsername 'IIS AppPool\MyWebApp1-AppPool'
 
     Description
     -----------
@@ -56,20 +53,16 @@ function Set-IISSiteAcl {
     #>    
     [CmdletBinding(SupportsShouldProcess)]
     param(
-        [Parameter(ValueFromPipeline, Position = 1)]
-        [ValidateScript( {CheckPathExists $_})]
-        [string] $SitePath,
-    
-        [Parameter(ValueFromPipeline, Position = 2)]
-        [string] $AppPath,
-    
-        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'AppPool', Position = 0)]
-        [ValidateNotNullOrEmpty()]
-        [string] $AppPoolName,
-    
-        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Username', Position = 0)]
+        [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
         [string] $AppPoolUsername,
+
+        [Parameter(ValueFromPipeline)]
+        [ValidateScript({CheckPathExists $_})]
+        [string] $SitePath,
+    
+        [Parameter(ValueFromPipeline)]
+        [string] $AppPath,
     
         [Parameter(ValueFromPipeline)]
         [ValidateNotNull()]
@@ -91,13 +84,6 @@ function Set-IISSiteAcl {
     process {
         try {
     
-            $appPoolIdentityName = if ($PSCmdlet.ParameterSetName -eq 'AppPool') {
-                "IIS AppPool\$AppPoolName"
-            }
-            else { 
-                $AppPoolUsername 
-            }
-    
             $paths = @{
                 SitePath      = $SitePath
                 AppPath       = $AppPath
@@ -110,8 +96,8 @@ function Set-IISSiteAcl {
             ValidateAclPaths $permissions 'Cannot grant permissions; missing paths detected'
 
             $permissions | ForEach-Object {
-                if ($PSCmdlet.ShouldProcess($_.Path, "Granting '$appPoolIdentityName' $($_.Description)")) {
-                    icacls ("$($_.Path)") /grant:r ("$appPoolIdentityName" + ':' + "$($_.Permission)") | Out-Null
+                if ($PSCmdlet.ShouldProcess($_.Path, "Granting '$AppPoolUsername' $($_.Description)")) {
+                    icacls ("$($_.Path)") /grant:r ("$AppPoolUsername" + ':' + "$($_.Permission)") | Out-Null
                 }
             }
         }

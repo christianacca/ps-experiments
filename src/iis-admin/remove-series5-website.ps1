@@ -23,17 +23,17 @@ $spaHostName = 'local-series5'
 
 # remove file permissions
 $spaAclParams = @{
-    SitePath     = $SitePhysicalPath
-    AppPath      = $spaAppPath
-    AppPoolName  = $mainAppPoolName 
-    ModifyPaths  = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
-    ExecutePaths = @('UDFs\PropertyBuilder.exe')
+    SitePath        = $SitePhysicalPath
+    AppPath         = $spaAppPath
+    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    ModifyPaths     = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
+    ExecutePaths    = @('UDFs\PropertyBuilder.exe')
 }
 Remove-CaccaIISSiteAcl @spaAclParams
 $winLoginAclParams = @{
-    AppPath     = $winLoginAppPath
-    AppPoolName = $mainAppPoolName 
-    ModifyPaths = @('App_Data')
+    AppPath         = $winLoginAppPath
+    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    ModifyPaths     = @('App_Data')
 }
 Remove-CaccaIISSiteAcl @winLoginAclParams
 

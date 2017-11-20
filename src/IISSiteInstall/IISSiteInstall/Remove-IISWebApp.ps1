@@ -55,9 +55,10 @@ function Remove-IISWebApp {
                 return
             }
 
+            # todo: derive 'AppPoolUsername' from pool
             $aclInfo = @{
                 AppPath             = $app.VirtualDirectories['/'].PhysicalPath
-                AppPoolName         = $app.ApplicationPoolName
+                AppPoolUsername     = "IIS AppPool\$($app.ApplicationPoolName)"
                 ModifyPaths         = $ModifyPaths
                 ExecutePaths        = $ExecutePaths
                 SkipMissingPaths    = $true

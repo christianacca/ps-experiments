@@ -121,11 +121,12 @@ function New-IISWebApp {
                 # Set-CaccaIISSiteAcl requires path to exist
             }
             else {
+                # todo: derive 'AppPoolUsername' from pool created above
                 $appAclParams = @{
-                    AppPath      = $childPath
-                    AppPoolName  = $AppPoolName
-                    ModifyPaths  = $ModifyPaths
-                    ExecutePaths = $ExecutePaths
+                    AppPath         = $childPath
+                    AppPoolUsername = "IIS AppPool\$AppPoolName"
+                    ModifyPaths     = $ModifyPaths
+                    ExecutePaths    = $ExecutePaths
                 }
                 Set-CaccaIISSiteAcl @appAclParams
             }

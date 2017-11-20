@@ -30,7 +30,7 @@ $winLoginAppName = 'WinLogin'
 
 # Create top level website
 $siteParams = @{
-    Name      = $SiteName
+    Name          = $SiteName
     Path          = $SitePhysicalPath
     HostName      = $spaHostName
     SiteShellOnly = $true
@@ -45,10 +45,10 @@ Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$spaAppName" -Commit:$false
 Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServerVariables' -Location "$SiteName/$spaAppName" -Commit:$false
 
 $spaAclParams = @{
-    AppPath      = $spaAppPath
-    AppPoolName  = $mainAppPoolName
-    ModifyPaths  = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
-    ExecutePaths = @('UDFs\PropertyBuilder.exe')
+    AppPath         = $spaAppPath
+    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    ModifyPaths     = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
+    ExecutePaths    = @('UDFs\PropertyBuilder.exe')
 }
 Set-CaccaIISSiteAcl @spaAclParams
 
@@ -60,9 +60,9 @@ Unlock-CaccaIISWindowsAuth -Location "$SiteName/$winLoginAppName" -Minimum -Comm
 Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$winLoginAppName" -Commit:$false
 
 $winLoginAclParams = @{
-    AppPath     = $winLoginAppPath
-    AppPoolName = $mainAppPoolName
-    ModifyPaths = @('App_Data')
+    AppPath         = $winLoginAppPath
+    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    ModifyPaths     = @('App_Data')
 }
 Set-CaccaIISSiteAcl @winLoginAclParams
 Stop-IISCommitDelay
