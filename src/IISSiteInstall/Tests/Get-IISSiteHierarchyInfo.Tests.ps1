@@ -13,12 +13,6 @@ $tempAppPool = "$testSiteName-AppPool"
 
 Describe 'Get-IISSiteHierarchyInfo' {
 
-    function Cleanup {
-        Reset-IISServerManager -Confirm:$false
-        Remove-CaccaIISWebsite $testSiteName -Confirm:$false -WA SilentlyContinue
-        Remove-CaccaIISWebsite $test2SiteName -Confirm:$false -WA SilentlyContinue
-    }
-
     Context 'Site only' {
 
         BeforeAll {
@@ -26,7 +20,8 @@ Describe 'Get-IISSiteHierarchyInfo' {
         }
 
         AfterAll {
-            Cleanup
+            Reset-IISServerManager -Confirm:$false
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 
         It 'Should return site app pool' {
@@ -59,7 +54,8 @@ Describe 'Get-IISSiteHierarchyInfo' {
         }
         
         AfterAll {
-            Cleanup
+            Reset-IISServerManager -Confirm:$false
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
         
         It 'Should return site app pool' {
@@ -88,7 +84,9 @@ Describe 'Get-IISSiteHierarchyInfo' {
         }
         
         AfterAll {
-            Cleanup
+            Reset-IISServerManager -Confirm:$false
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+            Remove-CaccaIISWebsite $test2SiteName -Confirm:$false
         }
         
         It 'Should return info for all sites' {
@@ -105,17 +103,14 @@ Describe 'Get-IISSiteHierarchyInfo' {
     Context "Site and child app" {
 
         BeforeAll {
-
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
-            Start-IISCommitDelay
-            $app = $site.Applications.Add('/MyApp1', (Join-Path $TestDrive 'MyApp1'))
-            $app.ApplicationPoolName = $tempAppPool
-            Stop-IISCommitDelay
-            Reset-IISServerManager -Confirm:$false
+            # given
+            New-CaccaIISWebsite $testSiteName $TestDrive -Force
+            New-CaccaIISWebApp $testSiteName MyApp1
         }
 
         AfterAll {
-            Cleanup
+            Reset-IISServerManager -Confirm:$false
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 
         It 'Should return site and child app pool' {

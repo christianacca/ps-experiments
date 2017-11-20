@@ -29,7 +29,7 @@ Describe "General project validation: $moduleName" {
         # dependencies already installed
         Install-Module PreferenceVariables -RequiredVersion '1.0'
         # Module and it's dependencies not already loaded into memory
-        Get-Module PreferenceVariables -All | Remove-Module
+        Get-Module PreferenceVariables -All | Remove-Module -Force
         Get-Module $moduleName -All | Remove-Module
 
         # when

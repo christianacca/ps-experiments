@@ -85,14 +85,8 @@ Describe 'Remove-IISWebsite' {
 
         BeforeAll {
             Cleanup
-
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
-            Start-IISCommitDelay
-            New-CaccaIISAppPool $childAppPool -Commit:$false
-            $app = $site.Applications.Add('/MyApp1', (Join-Path $TestDrive 'MyApp1'))
-            $app.ApplicationPoolName = $childAppPool
-            Stop-IISCommitDelay
-            Reset-IISServerManager -Confirm:$false
+            New-CaccaIISWebsite $testSiteName $TestDrive -Force
+            New-CaccaIISWebApp $testSiteName MyApp1 -AppPoolName $childAppPool
         }
 
         It 'Should remove site and site and child app pool' {
@@ -113,17 +107,9 @@ Describe 'Remove-IISWebsite' {
             # given
             Cleanup
             New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -AppPoolName $test2AppPool -Port 3564
-
             $childPath = "$TestDrive\MyApp1"
-            New-Item $childPath -ItemType Directory
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $test2AppPool
-            Start-IISCommitDelay
-            New-CaccaIISAppPool $testAppPool -Commit:$false
-            $app = $site.Applications.Add('/MyApp1', $childPath)
-            $app.ApplicationPoolName = $testAppPool
-            Stop-IISCommitDelay
-            icacls ("$childPath") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
-            Reset-IISServerManager -Confirm:$false
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $test2AppPool
+            New-CaccaIISWebApp $testSiteName MyApp1 -AppPoolName $testAppPool
 
             # checking assumptions
             GetAppPoolPermission "$TestDrive\Site2" $test2AppPoolUsername | Should -Not -BeNullOrEmpty

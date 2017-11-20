@@ -79,20 +79,13 @@ Describe 'Get-IISSiteAclPath' {
 
     Context 'Site + 2 child apps' {
         BeforeAll {
+            # given
             $childPath = "$TestDrive\MyApp1"
             $child2Path = "$TestDrive\MyApp2"
-
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
-            New-Item $childPath, $child2Path  -ItemType Directory
-            Start-IISCommitDelay
-            $app = $site.Applications.Add('/MyApp1', $childPath)
-            $app.ApplicationPoolName = $testAppPoolName
-            $app2 = $site.Applications.Add('/MyApp2', $child2Path)
-            $app2.ApplicationPoolName = $testAppPoolName
-            Stop-IISCommitDelay
-            icacls ("$childPath") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
-            icacls ("$child2Path") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
             Reset-IISServerManager -Confirm:$false
+            New-CaccaIISWebsite $testSiteName $TestDrive -Force
+            New-CaccaIISWebApp $testSiteName MyApp1 $childPath
+            New-CaccaIISWebApp $testSiteName MyApp2 $child2Path
         }
 
         AfterAll {
@@ -121,13 +114,13 @@ Describe 'Get-IISSiteAclPath' {
             $expected = @(
                 [PsCustomObject]@{
                     SiteName          = $testSiteName
-                    Path              = "$TestDrive\MyApp1"
+                    Path              = $childPath
                     IdentityReference = $testAppPoolUsername
                     IsShared          = $false
                 },
                 [PsCustomObject]@{
                     SiteName          = $testSiteName
-                    Path              = "$TestDrive\MyApp2"
+                    Path              = $child2Path
                     IdentityReference = $testAppPoolUsername
                     IsShared          = $false
                 }
@@ -231,20 +224,10 @@ Describe 'Get-IISSiteAclPath' {
             # given
             $childPath = "$TestDrive\MyApp1"
             $child2Path = "$TestDrive\MyApp2"
-
-            New-CaccaIISAppPool 'AnotherPool' -Force
             Reset-IISServerManager -Confirm:$false
-            [Microsoft.Web.Administration.Site] $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force
-            New-Item $childPath, $child2Path  -ItemType Directory
-            Start-IISCommitDelay
-            $app = $site.Applications.Add('/MyApp1', $childPath)
-            $app.ApplicationPoolName = 'AnotherPool'
-            $app2 = $site.Applications.Add('/MyApp2', $child2Path)
-            $app2.ApplicationPoolName = $testAppPoolName
-            Stop-IISCommitDelay
-            icacls ("$childPath") /grant:r ("$testAppPoolUsername" + ':(OI)(CI)R') | Out-Null
-            icacls ("$child2Path") /grant:r ('IIS AppPool\AnotherPool' + ':(OI)(CI)R') | Out-Null
-            Reset-IISServerManager -Confirm:$false
+            New-CaccaIISWebsite $testSiteName $TestDrive -Force
+            New-CaccaIISWebApp $testSiteName MyApp1 $childPath -AppPoolName 'AnotherPool'
+            New-CaccaIISWebApp $testSiteName MyApp2 $child2Path
         
             # when
             $paths = Get-CaccaIISSiteAclPath $testSiteName
@@ -257,7 +240,7 @@ Describe 'Get-IISSiteAclPath' {
         It 'Should include paths for both AppPool identities' {
             # then
             ($paths | ? IdentityReference -eq $testAppPoolUsername | measure).Count | Should -Be ($tempAspNetPathCount + 2)
-            ($paths | ? IdentityReference -eq 'IIS AppPool\AnotherPool' | measure).Count | Should -Be 1
+            ($paths | ? IdentityReference -eq 'IIS AppPool\AnotherPool' | measure).Count | Should -Be ($tempAspNetPathCount + 1)
         }
     }
 
@@ -331,21 +314,5 @@ Describe 'Get-IISSiteAclPath' {
                 ($paths | Where Path -eq "$TestDrive\Site2" | measure).Count | Should -Be 0
             }
         }
-
-        # Context '-Recurse -ExcludeShared' {
-        #     BeforeAll {
-        #         $paths = Get-CaccaIISSiteAclPath $testSiteName -ExcludeShared -Recurse
-        #     }
-
-        #     It 'Should exclude shared Temp ASP.Net files folders' {
-        #         $tempFilesFolders = Get-CaccaTempAspNetFilesPaths
-        #         # then
-        #         ($paths | ? Path -In $tempFilesFolders | measure).Count | Should -Be 0
-        #     }
-
-        #     It 'Should exclude nested paths assigned to physical paths of other sites' {
-        #         ($paths | ? Path -eq "$TestDrive\Site2" | measure).Count | Should -Be 0
-        #     }
-        # }
     }
 }
