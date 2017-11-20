@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 #Requires -Modules IISAdministration
 
-function Get-IISSiteAclPathCoreInfo {
+function Get-IISSiteAclPathHelper {
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipeline)]

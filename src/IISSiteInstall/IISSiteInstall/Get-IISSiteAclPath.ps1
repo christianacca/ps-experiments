@@ -18,7 +18,7 @@ function Get-IISSiteAclPath {
         $ErrorActionPreference = 'Stop'
 
         $allSiteInfos = @()
-        $allSiteInfos += Get-IISSiteAclPathCoreInfo
+        $allSiteInfos += Get-IISSiteAclPathHelper
     }
     
     process {
@@ -35,7 +35,7 @@ function Get-IISSiteAclPath {
             $siteNames += $siteInfos | Select-Object -Exp SiteName -Unique
 
             foreach ($siteName in $siteNames) {
-                $siteAclPaths = Get-IISSiteAclPathCoreInfo $siteName -Recurse:$Recurse
+                $siteAclPaths = Get-IISSiteAclPathHelper $siteName -Recurse:$Recurse
                 $otherSiteAclPaths = $allSiteInfos | Where-Object SiteName -ne $siteName
 
                 Write-Debug "Acl Paths: $siteAclPaths"
