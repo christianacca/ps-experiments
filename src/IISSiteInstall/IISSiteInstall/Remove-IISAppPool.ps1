@@ -56,19 +56,26 @@ function Remove-IISAppPool {
                 throw "Cannot delete AppPool, '$Name' is used by one or more Web applications/sites"
             }
 
-            if ($pool.ProcessModel.IdentityType -eq 'ApplicationPoolIdentity') {
-                $appPoolUsername = Get-IISAppPoolUsername $pool
-                $allAclPaths = @()
+            $appPoolUsername = Get-IISAppPoolUsername $pool
+            
+            $appPoolIdentityCount = Get-IISAppPool | Get-IISAppPoolUsername | Where-Object { $_ -eq $appPoolUsername } |
+                Measure-Object | Select-Object -Exp Count
+            $isNonSharedIdentity = $appPoolIdentityCount -lt 2
+            $isAppPoolIdentity = $pool.ProcessModel.IdentityType -eq 'ApplicationPoolIdentity'
+
+            $allAclPaths = @()
+            if ($isAppPoolIdentity) {
                 $allAclPaths += $sitesAclPaths
+            }
+            if ($isNonSharedIdentity) {
                 $allAclPaths += Get-CaccaTempAspNetFilesPaths | ForEach-Object {
                     [PsCustomObject] @{
                         Path = $_
                         IdentityReference = $appPoolUsername
                     }
                 }
-
-                $allAclPaths | Where-Object IdentityReference -eq $appPoolUsername | Remove-CaccaUserFromAcl
             }
+            $allAclPaths | Where-Object IdentityReference -eq $appPoolUsername | Remove-CaccaUserFromAcl
 
             if ($Commit) {
                 Start-IISCommitDelay

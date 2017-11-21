@@ -58,7 +58,7 @@ Describe 'Get-IISSiteHierarchyInfo' {
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
         
-        It 'Should return site app pool' {
+        It 'Should return site only info' {
             # when
             $info = Get-CaccaIISSiteHierarchyInfo $testSiteName
         

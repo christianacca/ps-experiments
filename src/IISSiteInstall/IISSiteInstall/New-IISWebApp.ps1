@@ -20,6 +20,9 @@ function New-IISWebApp {
         [string] $AppPoolName,
 
         [Parameter(ValueFromPipelineByPropertyName)]
+        [string] $AppPoolIdentity,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
 
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -95,11 +98,16 @@ function New-IISWebApp {
 
             try {
                 if (-not(Get-IISAppPool $AppPoolName -WA SilentlyContinue)) {
-                    New-IISAppPool $AppPoolName -Commit:$false | Out-Null
+                    New-IISAppPool $AppPoolName $AppPoolIdentity -Commit:$false | Out-Null
                 }
 
+                $pool = Get-IISAppPool $AppPoolName
+
+                $AppPoolIdentity = $pool | Get-IISAppPoolUsername
+
                 if ($AppPoolConfig) {
-                    Get-IISAppPool $AppPoolName | ForEach-Object $AppPoolConfig | Out-Null
+                    # note: assumed that 'AppPoolConfig' will NOT change the identity assigned to App Pool
+                    $pool | ForEach-Object $AppPoolConfig | Out-Null
                 }
 
                 if ($PSCmdlet.ShouldProcess($qualifiedAppName, 'Create Web Application')) {
@@ -121,10 +129,9 @@ function New-IISWebApp {
                 # Set-CaccaIISSiteAcl requires path to exist
             }
             else {
-                # todo: derive 'AppPoolIdentity' from pool created above
                 $appAclParams = @{
                     AppPath         = $childPath
-                    AppPoolIdentity = "IIS AppPool\$AppPoolName"
+                    AppPoolIdentity = $AppPoolIdentity
                     ModifyPaths     = $ModifyPaths
                     ExecutePaths    = $ExecutePaths
                 }

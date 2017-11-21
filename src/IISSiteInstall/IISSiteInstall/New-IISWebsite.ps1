@@ -99,6 +99,8 @@ function New-IISWebsite {
                     $bindingInfo = "*:$($Port):$($HostName)"
                     [Microsoft.Web.Administration.Site] $site = New-IISSite $Name $Path $bindingInfo $Protocol -Passthru
                     $site.Applications["/"].ApplicationPoolName = $AppPoolName
+
+                    # note: assumed that 'SiteConfig' will NOT change the identity assigned to App Pool
                     $site | ForEach-Object $SiteConfig
                 }
     

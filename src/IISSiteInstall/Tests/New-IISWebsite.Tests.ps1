@@ -8,7 +8,7 @@ $testSiteName = 'DeleteMeSite'
 $testAppPoolName = "$testSiteName-AppPool"
 $testAppPoolUsername = "IIS AppPool\$testAppPoolName"
 $sitePath = "C:\inetpub\sites\$testSiteName"
-$testLocalUser = 'PesterTestUser'
+
 
 Describe 'New-IISWebsite' {
 
@@ -22,7 +22,7 @@ Describe 'New-IISWebsite' {
         if (Test-Path $sitePath) {
             Remove-Item $sitePath -Recurse -Confirm:$false
         }
-        Get-LocalUser $testLocalUser -EA SilentlyContinue | Remove-LocalUser
+        Get-LocalUser 'PesterTestUser-*' | Remove-LocalUser
     }
 
     BeforeEach {
@@ -54,8 +54,14 @@ Describe 'New-IISWebsite' {
 
         $site.Applications['/'].ApplicationPoolName | Should -Be $testAppPoolName
         $site.Applications["/"].VirtualDirectories["/"].PhysicalPath | Should -Be $sitePath
-        $identities = (Get-Acl $sitePath).Access.IdentityReference
-        $identities | ? Value -eq $testAppPoolUsername | Should -Not -BeNullOrEmpty
+
+        $checkAccess = {
+            $identities = (Get-Acl $_).Access.IdentityReference
+            $identities | ? { $_.Value -eq $testAppPoolUsername } | Should -Not -BeNullOrEmpty
+        }
+
+        $sitePath | % $checkAccess
+        Get-CaccaTempAspNetFilesPaths | % $checkAccess
     }
 
     It "-Path" {
@@ -107,18 +113,24 @@ Describe 'New-IISWebsite' {
 
     It "-AppPoolIdentity" {
         # given
+        $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
+        $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
         New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
 
         # when
-        New-CaccaIISWebsite $testSiteName $tempSitePath -AppPoolIdentity $testLocalUser -EA Stop
+        New-CaccaIISWebsite $testSiteName $tempSitePath -AppPoolIdentity $domainQualifiedTestLocalUser -EA Stop
         
         # then
         $appPool = Get-IISAppPool $testAppPoolName
         $appPool | Should -Not -BeNullOrEmpty
-        $appPool | Get-CaccaIISAppPoolUsername | Should -Be $testLocalUser
-        $identities = (Get-Acl $tempSitePath).Access.IdentityReference
-        $identities | % { Write-Host $_ }
-        $identities | ? { $_.Value -eq $testLocalUser } | Should -Not -BeNullOrEmpty
+        $appPool | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser
+        & {
+            $tempSitePath
+            Get-CaccaTempAspNetFilesPaths
+        } | % {
+            $identities = (Get-Acl $_).Access.IdentityReference
+            $identities | ? { $_.Value -eq $domainQualifiedTestLocalUser } | Should -Not -BeNullOrEmpty
+        }        
     }
 
     It "-AppPoolConfig" {

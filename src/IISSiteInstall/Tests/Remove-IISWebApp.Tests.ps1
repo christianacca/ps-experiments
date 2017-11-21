@@ -114,6 +114,41 @@ Describe 'Remove-IISWebApp' {
         }
     }
 
+    Context 'Non-Shared app pool, Local user assigned as AppPool identity' {
+        
+        BeforeAll {
+            # given...
+
+            $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
+            $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
+            New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+
+            $appPoolName = 'NonSharedPool'
+            $appPoolUsername = "IIS AppPool\$appPoolName"
+            $appName = 'MyApp'
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -AppPoolIdentity $domainQualifiedTestLocalUser
+
+            # when
+            Remove-CaccaIISWebApp $testSiteName $appName
+        }
+
+        AfterAll {
+            Remove-LocalUser $testLocalUser
+        }
+
+        It 'Should remove file permissions to Web app path' {
+            # then
+            GetAppPoolPermission "$sitePath\$appName" $domainQualifiedTestLocalUser | Should -BeNullOrEmpty
+        }
+
+        It 'Should remove file permissions to Temp ASP.Net files folder' {
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $domainQualifiedTestLocalUser | Should -BeNullOrEmpty
+            }
+        }
+    }
+
     Context 'Additional file permissions' {
         BeforeAll {
             # given...

@@ -66,9 +66,57 @@ Describe 'Remove-IISWebsite' {
 
         It 'Should remove App pool file permissions' {
             # then
-            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -BeNullOrEmpty
+            & {
+                $TestDrive
+                Get-CaccaTempAspNetFilesPaths
+            } | % {
+                GetAppPoolPermission $_ $testAppPoolUsername | Should -BeNullOrEmpty
+            }   
         }
 
+    }
+
+    Context "Site only, AppPool using LocalUser" {
+        
+        BeforeAll {
+            Cleanup
+        
+            # given...
+
+            $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
+            $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
+            New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool -AppPoolIdentity $domainQualifiedTestLocalUser
+        
+
+            # when
+            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+        
+            Reset-IISServerManager -Confirm:$false
+        }
+        
+        AfterAll {
+            Cleanup
+            Get-LocalUser 'PesterTestUser-*' | Remove-LocalUser
+        }
+        
+        It 'Should remove site and app pool' {
+            # then
+            Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
+            Get-IISAppPool $testAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
+        }
+        
+        It 'Should remove App pool file permissions' {
+            # then
+            & {
+                $TestDrive
+                Get-CaccaTempAspNetFilesPaths
+            } | % {
+                GetAppPoolPermission $_ $domainQualifiedTestLocalUser | Should -BeNullOrEmpty
+            }   
+        }
+        
     }
 
     Context "Site only -WhatIf" {

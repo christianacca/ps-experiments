@@ -11,12 +11,15 @@ Describe 'New-IISAppPool' {
 
     Context 'App pool does not already exist' {
         BeforeEach {
+            $testLocalUser = 'PesterTestUser'
+            $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
             Get-IISAppPool $tempAppPool -WA SilentlyContinue | Remove-CaccaIISAppPool
             Reset-IISServerManager -Confirm:$false
         }
     
         AfterEach {
             Get-IISAppPool $tempAppPool | Remove-CaccaIISAppPool
+            Get-LocalUser $testLocalUser -EA SilentlyContinue | Remove-LocalUser
             Reset-IISServerManager -Confirm:$false
         }
     
@@ -44,22 +47,16 @@ Describe 'New-IISAppPool' {
             (Get-IISAppPool $tempAppPool).Enable32BitAppOnWin64 | Should -Be $false
         }
     
-        It "Can create with specific -AppPoolIdentity" {
+        It "Can create with specific user account" {
             # given
-            New-LocalUser 'PesterTestUser' -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+            New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
     
-            try {
-                # when
-                New-CaccaIISAppPool $tempAppPool 'PesterTestUser'
+            # when
+            New-CaccaIISAppPool $tempAppPool $domainQualifiedTestLocalUser
             
-                # then
-                Reset-IISServerManager -Confirm:$false
-                Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be 'PesterTestUser'
-            }
-            finally {
-                # cleanup
-                Remove-LocalUser 'PesterTestUser'
-            }
+            # then
+            Reset-IISServerManager -Confirm:$false
+            Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser
         }
     }
 

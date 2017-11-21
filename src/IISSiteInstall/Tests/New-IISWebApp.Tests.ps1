@@ -64,6 +64,13 @@ Describe 'New-IISWebApp' {
             $physicalPath = $app.VirtualDirectories["/"].PhysicalPath
             GetAppPoolPermission $physicalPath "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
         }
+
+        It 'Should assign specific user file permissions to Temp ASP.Net files folders' {
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
+            }
+        }
     }
 
     Context '-Name' {
@@ -196,6 +203,48 @@ Describe 'New-IISWebApp' {
         It 'Should assign new pool to Web application' {
             # then
             $app.ApplicationPoolName | Should -Be $appPoolName
+        }
+    }
+
+    Context '-AppPoolIdentity' {
+        BeforeAll {
+            # given...
+
+            $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
+            $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
+            New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+
+            $appPoolName = 'NonSharedPool86'
+            $appName = '/MyApp'
+
+
+            # when
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName  $appPoolName -AppPoolIdentity $domainQualifiedTestLocalUser
+
+            $app = (Get-IISSite $testSiteName).Applications[$appName]
+        }
+    
+        AfterAll {
+            Remove-CaccaIISWebApp $testSiteName $appName
+            Get-LocalUser $testLocalUser | Remove-LocalUser
+        }
+
+        It 'Should use specific user as AppPool identity' {
+            # then
+            Get-IISAppPool $appPoolName | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser
+        }
+
+        It 'Should assign specific user file permissions to the physical app path' {
+            # then
+            $physicalPath = $app.VirtualDirectories["/"].PhysicalPath
+            GetAppPoolPermission $physicalPath $domainQualifiedTestLocalUser | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Should assign specific user file permissions to Temp ASP.Net files folders' {
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $domainQualifiedTestLocalUser | Should -Not -BeNullOrEmpty
+            }
         }
     }
 
