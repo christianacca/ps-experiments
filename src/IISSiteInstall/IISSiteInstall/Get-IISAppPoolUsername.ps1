@@ -18,10 +18,23 @@ function Get-IISAppPoolUsername {
     
     process {
         try {
-            if ($InputObject.ProcessModel.IdentityType -eq 'ApplicationPoolIdentity') {
-                "IIS AppPool\$($InputObject.Name)"
-            } else {
-                $InputObject.ProcessModel.UserName
+
+            switch ($InputObject.ProcessModel.IdentityType) {
+                'ApplicationPoolIdentity' { 
+                    "IIS AppPool\$($InputObject.Name)"
+                }
+                'NetworkService' { 
+                    'NT AUTHORITY\NETWORK SERVICE'
+                }
+                'LocalSystem' { 
+                    'NT AUTHORITY\SYSTEM'
+                }
+                'LocalService' { 
+                    'NT AUTHORITY\LOCAL SERVICE'
+                }
+                Default {
+                    $InputObject.ProcessModel.UserName
+                }
             }
         }
         catch {
