@@ -12,8 +12,8 @@ function Remove-IISSiteAcl {
     .PARAMETER AppPath
     The physical Web application path. A path relative to SitePath can be supplied. Defaults to SitePath
 
-    .PARAMETER AppPoolUsername
-    The name of a specific User account whose permissions are to be removed
+    .PARAMETER AppPoolIdentity
+    The name of the User account whose permissions are to be removed
 
     .PARAMETER ModifyPaths
     Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
@@ -22,21 +22,21 @@ function Remove-IISSiteAcl {
     Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
 
     .EXAMPLE
-    Remove-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolUsername 'IIS AppPool\MyWebApp1-AppPool'
+    Remove-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolIdentity 'IIS AppPool\MyWebApp1-AppPool'
 
     Description
     -----------
     Remove AppPool Identity file permissions from a site
 
     .EXAMPLE
-    Remove-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolUsername 'IIS AppPool\MyWebApp1-AppPool'
+    Remove-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolIdentity 'IIS AppPool\MyWebApp1-AppPool'
 
     Description
     -----------
     Remove AppPool Identity file permissions from site and a child web application
 
     .EXAMPLE
-    Remove-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -ModifyPaths 'App_Data'
+    Remove-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolIdentity 'mydomain\myuser' -ModifyPaths 'App_Data'
 
     Description
     -----------
@@ -47,7 +47,7 @@ function Remove-IISSiteAcl {
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
-        [string] $AppPoolUsername,
+        [string] $AppPoolIdentity,
 
         [Parameter(ValueFromPipeline)]
         [ValidateScript({CheckPathExists $_})]
@@ -92,7 +92,7 @@ function Remove-IISSiteAcl {
 
             ValidateAclPaths $permissions 'Cannot remove permissions; missing paths detected'
 
-            $permissions | Remove-UserFromAcl -IdentityReference $AppPoolUsername
+            $permissions | Remove-UserFromAcl -IdentityReference $AppPoolIdentity
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

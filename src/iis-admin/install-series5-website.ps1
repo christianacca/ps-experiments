@@ -57,7 +57,7 @@ $site.Applications["/"].ApplicationPoolName = $mainAppPoolName
 
 $siteShellAclParams = @{
     SitePath        = $SitePhysicalPath
-    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    AppPoolIdentity = "IIS AppPool\$mainAppPoolName"
     SiteShellOnly   = $true
 }
 Set-CaccaIISSiteAcl @siteShellAclParams
@@ -70,7 +70,7 @@ Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServe
 
 $spaAclParams = @{
     AppPath         = $spaAppPath
-    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    AppPoolIdentity = "IIS AppPool\$mainAppPoolName"
     ModifyPaths     = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
     ExecutePaths    = @('UDFs\PropertyBuilder.exe')
 }
@@ -85,7 +85,7 @@ Unlock-CaccaIISAnonymousAuth -Location "$SiteName/$winLoginAppName" -Commit:$fal
 
 $winLoginAclParams = @{
     AppPath         = $winLoginAppPath
-    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    AppPoolIdentity = "IIS AppPool\$mainAppPoolName"
     ModifyPaths     = @('App_Data')
 }
 Set-CaccaIISSiteAcl @winLoginAclParams

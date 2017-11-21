@@ -20,8 +20,8 @@ function Set-IISSiteAcl {
     .PARAMETER AppPath
     The physical Web application path. A path relative to SitePath can be supplied. Defaults to SitePath
 
-    .PARAMETER AppPoolUsername
-    The name of a specific User account whose permissions are to be granted
+    .PARAMETER AppPoolIdentity
+    The name of the User account whose permissions are to be granted
 
     .PARAMETER ModifyPaths
     Additional paths to grant modify (inherited) permissions. Path(s) relative to AppPath can be supplied
@@ -37,14 +37,14 @@ function Set-IISSiteAcl {
     Grant site file permissions to AppPoolIdentity
 
     .EXAMPLE
-    Set-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolUsername 'IIS AppPool\MyWebApp1-AppPool'
+    Set-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -AppPoolIdentity 'IIS AppPool\MyWebApp1-AppPool'
 
     Description
     -----------
     Grant site and chid application file permissions to AppPoolIdentity
 
     .EXAMPLE
-    Set-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolUsername 'mydomain\myuser' -ModifyPaths 'App_Data'
+    Set-IISSiteAcl -AppPath 'C:\Apps\MyWebApp1' -AppPoolIdentity 'mydomain\myuser' -ModifyPaths 'App_Data'
 
     Description
     -----------
@@ -55,7 +55,7 @@ function Set-IISSiteAcl {
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
-        [string] $AppPoolUsername,
+        [string] $AppPoolIdentity,
 
         [Parameter(ValueFromPipeline)]
         [ValidateScript({CheckPathExists $_})]
@@ -96,8 +96,8 @@ function Set-IISSiteAcl {
             ValidateAclPaths $permissions 'Cannot grant permissions; missing paths detected'
 
             $permissions | ForEach-Object {
-                if ($PSCmdlet.ShouldProcess($_.Path, "Granting '$AppPoolUsername' $($_.Description)")) {
-                    icacls ("$($_.Path)") /grant:r ("$AppPoolUsername" + ':' + "$($_.Permission)") | Out-Null
+                if ($PSCmdlet.ShouldProcess($_.Path, "Granting '$AppPoolIdentity' $($_.Description)")) {
+                    icacls ("$($_.Path)") /grant:r ("$AppPoolIdentity" + ':' + "$($_.Permission)") | Out-Null
                 }
             }
         }

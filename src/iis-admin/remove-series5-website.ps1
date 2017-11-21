@@ -25,14 +25,14 @@ $spaHostName = 'local-series5'
 $spaAclParams = @{
     SitePath        = $SitePhysicalPath
     AppPath         = $spaAppPath
-    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    AppPoolIdentity = "IIS AppPool\$mainAppPoolName"
     ModifyPaths     = @('App_Data', 'Series5Seed\screens', 'UDFs', 'bin')
     ExecutePaths    = @('UDFs\PropertyBuilder.exe')
 }
 Remove-CaccaIISSiteAcl @spaAclParams
 $winLoginAclParams = @{
     AppPath         = $winLoginAppPath
-    AppPoolUsername = "IIS AppPool\$mainAppPoolName"
+    AppPoolIdentity = "IIS AppPool\$mainAppPoolName"
     ModifyPaths     = @('App_Data')
 }
 Remove-CaccaIISSiteAcl @winLoginAclParams
