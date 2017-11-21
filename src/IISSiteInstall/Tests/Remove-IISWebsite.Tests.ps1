@@ -36,57 +36,74 @@ Describe 'Remove-IISWebsite' {
 
     Context "Site only" {
 
-        BeforeEach {
+        BeforeAll {
             Cleanup
-            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool
-        }
 
-        It 'Should remove site and app pool' {
+            # given
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool
+
             # when
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
 
-            # then
             Reset-IISServerManager -Confirm:$false
+        }
+
+        AfterAll {
+            Cleanup
+        }
+
+        It 'Should remove site and app pool' {
+            # then
             Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
             Get-IISAppPool $testAppPool -WA SilentlyContinue | Should -BeNullOrEmpty
         }
 
-        It '-WhatIf should make no modifications' {
-            # when
-            Remove-CaccaIISWebsite $testSiteName -WhatIf
-
-            # then
-            Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
-            Get-IISAppPool $testAppPool | Should -Not -BeNullOrEmpty
-            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -Not -BeNullOrEmpty
-        }
-
         It 'ServerManager should be reset after delete' {
-            # when
-            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
-
+            # then
+            # note: this would fail if ServerManger was NOT reset
             New-IISSite $testSiteName $TestDrive '*:2222:' -EA Stop -Passthru | Should -Not -BeNullOrEmpty
         }
 
         It 'Should remove App pool file permissions' {
-            # checking assumptions
-            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -Not -BeNullOrEmpty
-
-            # when
-            Remove-CaccaIISWebsite $testSiteName -Confirm:$false
-
             # then
             GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -BeNullOrEmpty
         }
 
     }
 
+    Context "Site only -WhatIf" {
+        
+        BeforeAll {
+            Cleanup
+            # given
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool
+        }
+
+        AfterAll {
+            Cleanup
+        }
+        
+        It 'Should make no modifications' {
+            # when
+            Remove-CaccaIISWebsite $testSiteName -WhatIf
+        
+            # then
+            Get-IISSite $testSiteName | Should -Not -BeNullOrEmpty
+            Get-IISAppPool $testAppPool | Should -Not -BeNullOrEmpty
+            GetAppPoolPermission $TestDrive $testAppPoolUsername | Should -Not -BeNullOrEmpty
+        }        
+    }
+            
     Context "Site and child app" {
 
         BeforeAll {
             Cleanup
             New-CaccaIISWebsite $testSiteName $TestDrive -Force
             New-CaccaIISWebApp $testSiteName MyApp1 -AppPoolName $childAppPool
+        }
+
+        AfterAll {
+            Cleanup
         }
 
         It 'Should remove site and site and child app pool' {
@@ -103,7 +120,6 @@ Describe 'Remove-IISWebsite' {
     Context "Site and child app - shared app pool" {
 
         BeforeAll {
-
             # given
             Cleanup
             New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -AppPoolName $test2AppPool -Port 3564
@@ -119,7 +135,7 @@ Describe 'Remove-IISWebsite' {
             # when
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
-
+                
         AfterAll {
             Cleanup
         }
