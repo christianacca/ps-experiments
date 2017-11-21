@@ -1,6 +1,3 @@
-#Requires -RunAsAdministrator
-#Requires -Modules IISAdministration
-
 function Get-IISSiteHierarchyInfo {
     [CmdletBinding()]
     param (
@@ -56,8 +53,5 @@ function Get-IISSiteHierarchyInfo {
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
-    }
-
-    end {
     }
 }

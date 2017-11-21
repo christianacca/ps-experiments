@@ -1,5 +1,4 @@
 #Requires -RunAsAdministrator
-#Requires -Modules IISAdministration
 
 function New-IISAppPool {
     [CmdletBinding(SupportsShouldProcess)]

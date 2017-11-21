@@ -1,6 +1,3 @@
-#Requires -RunAsAdministrator
-#Requires -Modules IISAdministration
-
 function Get-IISAppPoolUsername {
     [CmdletBinding()]
     param (
@@ -40,8 +37,5 @@ function Get-IISAppPoolUsername {
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
-    }
-
-    end {
     }
 }

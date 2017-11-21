@@ -1,6 +1,3 @@
-#Requires -RunAsAdministrator
-#Requires -Modules IISAdministration
-
 function Get-IISSiteAclPathHelper {
     [CmdletBinding()]
     param (
@@ -87,8 +84,5 @@ function Get-IISSiteAclPathHelper {
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
-    }
-
-    end {
     }
 }
