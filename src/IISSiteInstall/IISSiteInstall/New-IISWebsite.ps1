@@ -35,6 +35,9 @@ function New-IISWebsite {
         [string] $AppPoolName,
 
         [Parameter(ValueFromPipelineByPropertyName)]
+        [string] $AppPoolIdentity,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
 
         [switch] $Force
@@ -89,8 +92,8 @@ function New-IISWebsite {
 
             try {
     
-                # todo: allow 'AppPoolIdentity' to be supplied
-                New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false | Out-Null
+                $AppPoolIdentity = New-IISAppPool $AppPoolName $AppPoolIdentity $AppPoolConfig -Force -Commit:$false | 
+                    Get-IISAppPoolUsername
     
                 if ($PSCmdlet.ShouldProcess($Name, 'Create Web Site')) {
                     $bindingInfo = "*:$($Port):$($HostName)"
@@ -113,10 +116,12 @@ function New-IISWebsite {
                 # Set-CaccaIISSiteAcl requires path to exist
             }
             else {
-                # todo: derive 'AppPoolIdentity' from pool created above
+                if ($WhatIfPreference -eq $true -and [string]::IsNullOrWhiteSpace($AppPoolIdentity)) {
+                    $AppPoolIdentity = "IIS AppPool\$AppPoolName"
+                }
                 $siteAclParams = @{
                     SitePath        = $Path
-                    AppPoolIdentity = "IIS AppPool\$AppPoolName"
+                    AppPoolIdentity = $AppPoolIdentity
                     ModifyPaths     = $ModifyPaths
                     ExecutePaths    = $ExecutePaths
                     SiteShellOnly   = $SiteShellOnly

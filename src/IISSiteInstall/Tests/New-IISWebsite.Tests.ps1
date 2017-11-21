@@ -6,7 +6,9 @@ Import-Module $modulePath
 
 $testSiteName = 'DeleteMeSite'
 $testAppPoolName = "$testSiteName-AppPool"
+$testAppPoolUsername = "IIS AppPool\$testAppPoolName"
 $sitePath = "C:\inetpub\sites\$testSiteName"
+$testLocalUser = 'PesterTestUser'
 
 Describe 'New-IISWebsite' {
 
@@ -20,6 +22,7 @@ Describe 'New-IISWebsite' {
         if (Test-Path $sitePath) {
             Remove-Item $sitePath -Recurse -Confirm:$false
         }
+        Get-LocalUser $testLocalUser -EA SilentlyContinue | Remove-LocalUser
     }
 
     BeforeEach {
@@ -38,13 +41,21 @@ Describe 'New-IISWebsite' {
         # then
         [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
         $site | Should -Not -BeNullOrEmpty
+
         $binding = $site.Bindings[0]
         $binding.Protocol | Should -Be 'http'
         $binding.EndPoint.Port | Should -Be 80
+
+        $appPool = Get-IISAppPool $testAppPoolName
+        $appPool | Should -Not -BeNullOrEmpty
+        $appPool.Name | Should -Be $testAppPoolName
+        $appPool.Enable32BitAppOnWin64 | Should -Be $true
+        $appPool | Get-CaccaIISAppPoolUsername | Should -Be $testAppPoolUsername
+
         $site.Applications['/'].ApplicationPoolName | Should -Be $testAppPoolName
         $site.Applications["/"].VirtualDirectories["/"].PhysicalPath | Should -Be $sitePath
         $identities = (Get-Acl $sitePath).Access.IdentityReference
-        $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
+        $identities | ? Value -eq $testAppPoolUsername | Should -Not -BeNullOrEmpty
     }
 
     It "-Path" {
@@ -56,7 +67,7 @@ Describe 'New-IISWebsite' {
         $site | Should -Not -BeNullOrEmpty
         $site.Applications['/'].VirtualDirectories['/'].PhysicalPath | Should -Be $tempSitePath
         $identities = (Get-Acl $tempSitePath).Access.IdentityReference
-        $identities | ? Value -eq "IIS AppPool\$testAppPoolName" | Should -Not -BeNullOrEmpty
+        $identities | ? Value -eq $testAppPoolUsername | Should -Not -BeNullOrEmpty
     }
 
     It "-SiteConfig" {
@@ -92,6 +103,22 @@ Describe 'New-IISWebsite' {
         [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
         $site | Should -Not -BeNullOrEmpty
         $site.Applications["/"].ApplicationPoolName | Should -Be 'MyAppPool'
+    }
+
+    It "-AppPoolIdentity" {
+        # given
+        New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+
+        # when
+        New-CaccaIISWebsite $testSiteName $tempSitePath -AppPoolIdentity $testLocalUser -EA Stop
+        
+        # then
+        $appPool = Get-IISAppPool $testAppPoolName
+        $appPool | Should -Not -BeNullOrEmpty
+        $appPool | Get-CaccaIISAppPoolUsername | Should -Be $testLocalUser
+        $identities = (Get-Acl $tempSitePath).Access.IdentityReference
+        $identities | % { Write-Host $_ }
+        $identities | ? { $_.Value -eq $testLocalUser } | Should -Not -BeNullOrEmpty
     }
 
     It "-AppPoolConfig" {

@@ -4,9 +4,9 @@
 function Get-IISAppPoolUsername {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNull()]
-        [Microsoft.Web.Administration.ApplicationPool] $AppPool
+        [Microsoft.Web.Administration.ApplicationPool] $InputObject
     )
     
     begin {
@@ -18,10 +18,10 @@ function Get-IISAppPoolUsername {
     
     process {
         try {
-            if ($AppPool.ProcessModel.IdentityType -eq 'ApplicationPoolIdentity') {
-                "IIS AppPool\$($AppPool.Name)"
+            if ($InputObject.ProcessModel.IdentityType -eq 'ApplicationPoolIdentity') {
+                "IIS AppPool\$($InputObject.Name)"
             } else {
-                $AppPool.ProcessModel.UserName
+                $InputObject.ProcessModel.UserName
             }
         }
         catch {

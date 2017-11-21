@@ -9,48 +9,72 @@ $tempAppPool = 'TestAppPool'
 
 Describe 'New-IISAppPool' {
 
-    AfterEach {
-        Reset-IISServerManager -Confirm:$false
-    }
-
-    It "Can create with sensible defaults" {
-
-        # when
-        [Microsoft.Web.Administration.ApplicationPool] $pool = New-CaccaIISAppPool $tempAppPool -Commit:$false
-
-        # then
-        $pool.Enable32BitAppOnWin64 | Should -Be $true
-        $pool.Name | Should -Be $tempAppPool
-    }
-
-    It "Can override defaults in config script block" {
-        
-        # when
-        $pool = New-CaccaIISAppPool $tempAppPool -Commit:$false -Config {
-            $_.Enable32BitAppOnWin64 = $false
+    Context 'App pool does not already exist' {
+        BeforeEach {
+            Get-IISAppPool $tempAppPool -WA SilentlyContinue | Remove-CaccaIISAppPool
+            Reset-IISServerManager -Confirm:$false
         }
-        
-        # then
-        $pool.Enable32BitAppOnWin64 | Should -Be $false
+    
+        AfterEach {
+            Get-IISAppPool $tempAppPool | Remove-CaccaIISAppPool
+            Reset-IISServerManager -Confirm:$false
+        }
+    
+        It "Can create with sensible defaults" {
+    
+            # when
+            New-CaccaIISAppPool $tempAppPool
+    
+            # then
+            Reset-IISServerManager -Confirm:$false
+            [Microsoft.Web.Administration.ApplicationPool] $pool = Get-IISAppPool $tempAppPool
+            $pool.Enable32BitAppOnWin64 | Should -Be $true
+            $pool.Name | Should -Be $tempAppPool
+        }
+    
+        It "Can override defaults in config script block" {
+            
+            # when
+            New-CaccaIISAppPool $tempAppPool -Config {
+                $_.Enable32BitAppOnWin64 = $false
+            }
+            
+            # then
+            Reset-IISServerManager -Confirm:$false
+            (Get-IISAppPool $tempAppPool).Enable32BitAppOnWin64 | Should -Be $false
+        }
+    
+        It "Can create with specific -AppPoolIdentity" {
+            # given
+            New-LocalUser 'PesterTestUser' -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+    
+            try {
+                # when
+                New-CaccaIISAppPool $tempAppPool 'PesterTestUser'
+            
+                # then
+                Reset-IISServerManager -Confirm:$false
+                Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be 'PesterTestUser'
+            }
+            finally {
+                # cleanup
+                Remove-LocalUser 'PesterTestUser'
+            }
+        }
     }
 
     Context 'App pool already exists' {
-        
-        function Cleanup {
-            Reset-IISServerManager -Confirm:$false
-            Remove-CaccaIISWebsite $testSiteName -WA SilentlyContinue -Confirm:$false
-        }
-
 
         BeforeEach {
-            Cleanup
-            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $tempAppPool -AppPoolConfig {
+            Reset-IISServerManager -Confirm:$false
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $tempAppPool -Force -AppPoolConfig {
                 $_.Enable32BitAppOnWin64 = $false
             }
         }
 
         AfterEach {
-            Cleanup
+            Reset-IISServerManager -Confirm:$false
+            Remove-CaccaIISWebsite $testSiteName -WA SilentlyContinue -Confirm:$false
         }
 
         It 'Should throw' {
