@@ -17,6 +17,9 @@ function Remove-IISWebsite {
     
     process {
         try {
+            $Name = $Name.Trim()
+            
+
             # note: this will produce a warning if site does not exist (this is the desire behaviour - no need to reproduce here)
             $siteInfo = Get-IISSiteHierarchyInfo $Name
 

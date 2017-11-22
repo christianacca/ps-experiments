@@ -23,24 +23,25 @@ function Remove-IISWebApp {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-
-        $SiteName = $SiteName.Trim()
-        $Name = $Name.Trim()
-
-        if (!$Name.StartsWith('/')) {
-            $Name = '/' + $Name
-        }
-
-        if ($ModifyPaths -eq $null) {
-            $ModifyPaths = @()
-        }
-        if ($ExecutePaths -eq $null) {
-            $ExecutePaths = @()
-        }
     }
     
     process {
         try {
+            $SiteName = $SiteName.Trim()
+            $Name = $Name.Trim()
+    
+            if (!$Name.StartsWith('/')) {
+                $Name = '/' + $Name
+            }
+    
+            if ($ModifyPaths -eq $null) {
+                $ModifyPaths = @()
+            }
+            if ($ExecutePaths -eq $null) {
+                $ExecutePaths = @()
+            }
+
+
             # note: NOT throwing to be consistent with IISAdministration\Remove-IISSite
             $site = Get-IISSite $SiteName
             if (!$site) {

@@ -4,8 +4,12 @@ function Test-Func {
         [Parameter(Mandatory, ParameterSetName='Enabled')]
         [switch]$Enable,
         [Parameter(Mandatory, ParameterSetName='Disabled')]
-        [switch]$Disable
+        [switch]$Disable,
+
+        [Parameter(Mandatory)]
+        [PsCustomObject] $RefValue
     )
+    Write-Verbose $RefValue
     if ($Enable.IsPresent -and $PSCmdlet.ShouldProcess('Resource', 'Enable')) {
         Write-Verbose "Enabling resource"
     }
@@ -16,4 +20,5 @@ function Test-Func {
 }
 Clear-Host
 
-Test-Func -Enable -WhatIf
+Test-Func -Enable -Verbose
+Test-Func -Enable -RefValue $null -Verbose

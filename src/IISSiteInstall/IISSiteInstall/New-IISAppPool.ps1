@@ -24,9 +24,6 @@ function New-IISAppPool {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 
-        if ($Config -eq $null) {
-            $Config = {}
-        }
         if (!$PSBoundParameters.ContainsKey('Commit')) {
             $Commit = $true
         }
@@ -35,6 +32,10 @@ function New-IISAppPool {
     process {
         try {
             
+            if ($Config -eq $null) {
+                $Config = {}
+            }
+
             [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
 
             $existingPool = $manager.ApplicationPools[$Name]

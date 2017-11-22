@@ -47,31 +47,30 @@ function New-IISWebsite {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-
-        # Import-Module IISSecurity -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'        
-
-        if ([string]::IsNullOrWhiteSpace($Path)) {
-            $Path = "C:\inetpub\sites\$Name"
-        }
-        if ($SiteConfig -eq $null) {
-            $SiteConfig = {}
-        }
-        if ($ModifyPaths -eq $null) {
-            $ModifyPaths = @()
-        }
-        if ($ExecutePaths -eq $null) {
-            $ExecutePaths = @()
-        }
-        if ([string]::IsNullOrWhiteSpace($AppPoolName)) {
-            $AppPoolName = "$Name-AppPool"
-        }
-        if ($AppPoolConfig -eq $null) {
-            $AppPoolConfig = {}
-        }
     }
     
     process {
         try {
+            $Name = $Name.Trim()
+            if ([string]::IsNullOrWhiteSpace($Path)) {
+                $Path = "C:\inetpub\sites\$Name"
+            }
+            if ($SiteConfig -eq $null) {
+                $SiteConfig = {}
+            }
+            if ($ModifyPaths -eq $null) {
+                $ModifyPaths = @()
+            }
+            if ($ExecutePaths -eq $null) {
+                $ExecutePaths = @()
+            }
+            if ([string]::IsNullOrWhiteSpace($AppPoolName)) {
+                $AppPoolName = "$Name-AppPool"
+            }
+            if ($AppPoolConfig -eq $null) {
+                $AppPoolConfig = {}
+            }
+
             
             $existingSite = Get-IISSite $Name -WA SilentlyContinue
             if ($existingSite -and !$Force) {

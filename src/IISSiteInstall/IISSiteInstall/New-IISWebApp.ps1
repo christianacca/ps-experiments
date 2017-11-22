@@ -38,24 +38,24 @@ function New-IISWebApp {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-
-        $SiteName = $SiteName.Trim()
-        $Name = $Name.Trim()
-
-        if (!$Name.StartsWith('/')) {
-            $Name = '/' + $Name
-        }
-
-        if ($ModifyPaths -eq $null) {
-            $ModifyPaths = @()
-        }
-        if ($ExecutePaths -eq $null) {
-            $ExecutePaths = @()
-        }
     }
     
     process {
         try {
+
+            $SiteName = $SiteName.Trim()
+            $Name = $Name.Trim()
+            if (!$Name.StartsWith('/')) {
+                $Name = '/' + $Name
+            }
+            if ($ModifyPaths -eq $null) {
+                $ModifyPaths = @()
+            }
+            if ($ExecutePaths -eq $null) {
+                $ExecutePaths = @()
+            }
+            
+
             $site = Get-IISSite $SiteName
             if (!$site) {
                 return

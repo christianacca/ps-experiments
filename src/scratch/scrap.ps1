@@ -8,6 +8,7 @@ $testAppPoolUsername = "IIS AppPool\$testAppPoolName"
 $testLocalUser = 'PesterTestUser'
 
 Reset-IISServerManager -Confirm:$false
+New-CaccaIISAppPool 'DeleteMePlease' -AppPoolIdentity 'BSW\ccrowhurst' -Force
 
 try {
     $user = try {

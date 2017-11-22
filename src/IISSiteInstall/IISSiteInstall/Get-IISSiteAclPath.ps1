@@ -20,6 +20,10 @@ function Get-IISSiteAclPath {
     
     process {
         try {
+            if (![string]::IsNullOrWhiteSpace($Name)) {
+                $Name = $Name.Trim()
+            }
+
 
             $siteInfos = if ([string]::IsNullOrWhiteSpace($Name)) {
                 $allSiteInfos

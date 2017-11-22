@@ -22,7 +22,7 @@ function Get-IISSiteHierarchyInfo {
             }
             else {
                 @{
-                    Name = $Name
+                    Name = $Name.Trim()
                 }
             }
 

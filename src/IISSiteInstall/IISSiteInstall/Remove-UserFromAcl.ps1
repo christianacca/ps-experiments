@@ -21,9 +21,10 @@ function Remove-UserFromAcl {
     
     process {
         try {
+            $Username = $Username.Trim()
+            
 
             if ($PSCmdlet.ShouldProcess($Path, "Remove user '$Username'")) {
-                
                 
                 # note: Where-Object we're ignoring errors. In essence we are skipping any user object
                 # (IdentityReference) that can no longer be translated to a string, probably because it is "unknown"
