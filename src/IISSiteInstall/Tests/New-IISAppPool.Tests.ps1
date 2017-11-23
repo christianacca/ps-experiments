@@ -50,7 +50,9 @@ Describe 'New-IISAppPool' {
             New-LocalUser $testLocalUser -Password $pswd
     
             # when
-            New-CaccaIISAppPool $tempAppPool $creds
+            New-CaccaIISAppPool $tempAppPool -Config {
+                $_ | Set-CaccaIISAppPoolUser $creds
+            }
             
             # then
             Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser

@@ -76,7 +76,7 @@ Describe 'Remove-IISWebsite' {
 
     }
 
-    Context "Site only, AppPool using LocalUser" {
+    Context "Site only, specific user assigned as AppPool identity" {
         
         BeforeAll {
             Cleanup
@@ -89,7 +89,9 @@ Describe 'Remove-IISWebsite' {
             $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
             New-LocalUser $testLocalUser -Password $pswd
 
-            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool -Credential $creds
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool -AppPoolConfig {
+                $_ | Set-CaccaIISAppPoolUser $creds
+            }
         
 
             # when

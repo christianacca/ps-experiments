@@ -113,7 +113,7 @@ Describe 'Remove-IISWebApp' {
         }
     }
 
-    Context 'Non-Shared app pool, Local user assigned as AppPool identity' {
+    Context 'Non-Shared app pool, specific user assigned as AppPool identity' {
         
         BeforeAll {
             # given...
@@ -127,7 +127,9 @@ Describe 'Remove-IISWebApp' {
             $appPoolName = 'NonSharedPool'
             $appPoolUsername = "IIS AppPool\$appPoolName"
             $appName = 'MyApp'
-            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -Credential $creds
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -AppPoolConfig {
+                $_ | Set-CaccaIISAppPoolUser $creds
+            }
 
             # when
             Remove-CaccaIISWebApp $testSiteName $appName

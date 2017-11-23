@@ -19,9 +19,6 @@ function New-IISWebApp {
         [string] $AppPoolName,
 
         [Parameter(ValueFromPipelineByPropertyName)]
-        [PsCredential] $Credential,
-
-        [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
 
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -66,7 +63,7 @@ function New-IISWebApp {
             if ($ExecutePaths -eq $null) {
                 $ExecutePaths = @()
             }
-            
+
 
             $site = Get-IISSite $SiteName
             if (!$site) {
@@ -89,7 +86,6 @@ function New-IISWebApp {
                 throw "Cannot create Web Application - AppPool '$AppPoolName' is in use on another site"
             }
             if ($AppPoolConfig -and (GetAppPoolOtherAppCount $SiteName $Name $AppPoolName) -gt 0) {
-                # should this be a warning instead?
                 throw "Cannot configure AppPool '$AppPoolName' - it belongs to another Web Application and/or this site"
             }
 
@@ -114,19 +110,13 @@ function New-IISWebApp {
             $site = Get-IISSite $SiteName
 
             Start-IISCommitDelay
-
-            $appPoolIdentity = ''
             try {
-                if (-not(Get-IISAppPool $AppPoolName -WA SilentlyContinue)) {
-                    New-IISAppPool $AppPoolName $Credential -Commit:$false | Out-Null
+                $pool = Get-IISAppPool $AppPoolName -WA SilentlyContinue
+                if (!$pool) {
+                    $pool = New-IISAppPool $AppPoolName -Commit:$false
                 }
 
-                $pool = Get-IISAppPool $AppPoolName
-
-                $appPoolIdentity = $pool | Get-IISAppPoolUsername
-
-                if ($AppPoolConfig) {
-                    # note: assumed that 'AppPoolConfig' will NOT change the identity assigned to App Pool
+                if ($AppPoolConfig -and $WhatIfPreference -eq $false) {
                     $pool | ForEach-Object $AppPoolConfig | Out-Null
                 }
 
@@ -149,6 +139,10 @@ function New-IISWebApp {
                 # Set-CaccaIISSiteAcl requires path to exist
             }
             else {
+                $appPoolIdentity = Get-IISAppPool $AppPoolName | Get-IISAppPoolUsername
+                if ($WhatIfPreference -eq $true -and [string]::IsNullOrWhiteSpace($appPoolIdentity)) {
+                    $appPoolIdentity = "IIS AppPool\$AppPoolName"
+                }
                 $appAclParams = @{
                     AppPath         = $childPath
                     AppPoolIdentity = $appPoolIdentity

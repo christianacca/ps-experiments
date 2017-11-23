@@ -206,50 +206,6 @@ Describe 'New-IISWebApp' {
         }
     }
 
-    Context '-Credential' {
-        BeforeAll {
-            # given...
-
-            $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
-            $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
-            $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
-            $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
-            New-LocalUser $testLocalUser -Password $pswd
-
-            $appPoolName = 'NonSharedPool86'
-            $appName = '/MyApp'
-
-
-            # when
-            New-CaccaIISWebApp $testSiteName $appName -AppPoolName  $appPoolName -Credential $creds
-
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
-        }
-    
-        AfterAll {
-            Remove-CaccaIISWebApp $testSiteName $appName
-            Get-LocalUser $testLocalUser | Remove-LocalUser
-        }
-
-        It 'Should use specific user as AppPool identity' {
-            # then
-            Get-IISAppPool $appPoolName | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser
-        }
-
-        It 'Should assign specific user file permissions to the physical app path' {
-            # then
-            $physicalPath = $app.VirtualDirectories["/"].PhysicalPath
-            GetAppPoolPermission $physicalPath $domainQualifiedTestLocalUser | Should -Not -BeNullOrEmpty
-        }
-
-        It 'Should assign specific user file permissions to Temp ASP.Net files folders' {
-            # then
-            Get-CaccaTempAspNetFilesPaths | % {
-                GetAppPoolPermission $_ $domainQualifiedTestLocalUser | Should -Not -BeNullOrEmpty
-            }
-        }
-    }
-
     Context '-AppPoolConfig, when pool exists' {
         BeforeAll {
             # given
@@ -300,6 +256,52 @@ Describe 'New-IISWebApp' {
             $pool = Get-IISAppPool $appPoolName
             $pool.Enable32BitAppOnWin64 | Should -Be $false
             $pool.AutoStart | Should -Be $false
+        }
+    }
+
+    Context '-AppPoolConfig, pool does NOT exist, setting app identity to specific user' {
+        BeforeAll {
+            # given...
+
+            $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
+            $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
+            $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
+            $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
+            New-LocalUser $testLocalUser -Password $pswd
+
+            $appPoolName = 'NonSharedPool86'
+            $appName = '/MyApp'
+
+
+            # when
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName  $appPoolName -AppPoolConfig {
+                $_ | Set-CaccaIISAppPoolUser $creds
+            }
+
+            $app = (Get-IISSite $testSiteName).Applications[$appName]
+        }
+    
+        AfterAll {
+            Remove-CaccaIISWebApp $testSiteName $appName
+            Get-LocalUser $testLocalUser | Remove-LocalUser
+        }
+
+        It 'Should use specific user as AppPool identity' {
+            # then
+            Get-IISAppPool $appPoolName | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser
+        }
+
+        It 'Should assign specific user file permissions to the physical app path' {
+            # then
+            $physicalPath = $app.VirtualDirectories["/"].PhysicalPath
+            GetAppPoolPermission $physicalPath $domainQualifiedTestLocalUser | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Should assign specific user file permissions to Temp ASP.Net files folders' {
+            # then
+            Get-CaccaTempAspNetFilesPaths | % {
+                GetAppPoolPermission $_ $domainQualifiedTestLocalUser | Should -Not -BeNullOrEmpty
+            }
         }
     }
 
@@ -374,7 +376,10 @@ Describe 'New-IISWebApp' {
             $appPoolName = 'NonSharedPool26'
 
             # when
-            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -WhatIf
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -AppPoolConfig {
+                # this will fail this config block were to be called
+                Set-CaccaIISAppPoolUser
+            } -WhatIf
         }
 
         It 'Should NOT have created child app' {

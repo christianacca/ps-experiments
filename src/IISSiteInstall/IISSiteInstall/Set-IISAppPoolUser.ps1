@@ -1,12 +1,12 @@
 function Set-IISAppPoolUser {
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory)]
+        [PsCredential] $Credential,
+
         [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNull()]
         [Microsoft.Web.Administration.ApplicationPool] $InputObject,
-
-        [Parameter(Mandatory)]
-        [PsCredential] $Credential,
         
         [switch] $Commit
     )
@@ -16,10 +16,6 @@ function Set-IISAppPoolUser {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-
-        if (!$PSBoundParameters.ContainsKey('Commit')) {
-            $Commit = $true
-        }
     }
     
     process {

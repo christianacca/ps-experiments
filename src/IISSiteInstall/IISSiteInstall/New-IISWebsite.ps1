@@ -34,9 +34,6 @@ function New-IISWebsite {
         [string] $AppPoolName,
 
         [Parameter(ValueFromPipelineByPropertyName)]
-        [PsCredential] $Credential,
-
-        [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
 
         [switch] $Force
@@ -91,12 +88,9 @@ function New-IISWebsite {
             }
 
             Start-IISCommitDelay
-
-            $appPoolIdentity = ''
             try {
     
-                $appPoolIdentity = New-IISAppPool $AppPoolName $Credential $AppPoolConfig -Force -Commit:$false | 
-                    Get-IISAppPoolUsername
+                New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false | Out-Null
     
                 if ($PSCmdlet.ShouldProcess($Name, 'Create Web Site')) {
                     $bindingInfo = "*:$($Port):$($HostName)"
@@ -121,6 +115,7 @@ function New-IISWebsite {
                 # Set-CaccaIISSiteAcl requires path to exist
             }
             else {
+                $appPoolIdentity = Get-IISAppPool $AppPoolName | Get-IISAppPoolUsername
                 if ($WhatIfPreference -eq $true -and [string]::IsNullOrWhiteSpace($appPoolIdentity)) {
                     $appPoolIdentity = "IIS AppPool\$AppPoolName"
                 }

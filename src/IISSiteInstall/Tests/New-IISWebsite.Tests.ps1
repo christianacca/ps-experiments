@@ -111,7 +111,7 @@ Describe 'New-IISWebsite' {
         $site.Applications["/"].ApplicationPoolName | Should -Be 'MyAppPool'
     }
 
-    It "-Credential" {
+    It "-AppPoolConfig used to set AppPool identity to specific user" {
         # given
         $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
         $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
@@ -120,7 +120,9 @@ Describe 'New-IISWebsite' {
         New-LocalUser $testLocalUser -Password $pswd
 
         # when
-        New-CaccaIISWebsite $testSiteName $tempSitePath -Credential $creds -EA Stop
+        New-CaccaIISWebsite $testSiteName $tempSitePath -EA Stop -AppPoolConfig {
+            $_ | Set-CaccaIISAppPoolUser $creds
+        }
         
         # then
         $appPool = Get-IISAppPool $testAppPoolName
@@ -200,7 +202,10 @@ Describe 'New-IISWebsite' {
 
     It "-WhatIf should not modify anything" {
         # when
-        New-CaccaIISWebsite $testSiteName $tempSitePath -AppPoolName 'MyAppPool' -WhatIf
+        New-CaccaIISWebsite $testSiteName $tempSitePath -AppPoolName 'MyAppPool'  -AppPoolConfig {
+            # this will fail this config block were to be called
+            Set-CaccaIISAppPoolUser
+        } -WhatIf
 
         # then
         Get-IISSite $testSiteName -WA SilentlyContinue | Should -BeNullOrEmpty
