@@ -82,7 +82,7 @@ Describe 'Get-IISSiteAclPath' {
             # given
             $childPath = "$TestDrive\MyApp1"
             $child2Path = "$TestDrive\MyApp2"
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             New-CaccaIISWebsite $testSiteName $TestDrive -Force
             New-CaccaIISWebApp $testSiteName MyApp1 $childPath
             New-CaccaIISWebApp $testSiteName MyApp2 $child2Path
@@ -224,7 +224,7 @@ Describe 'Get-IISSiteAclPath' {
             # given
             $childPath = "$TestDrive\MyApp1"
             $child2Path = "$TestDrive\MyApp2"
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             New-CaccaIISWebsite $testSiteName $TestDrive -Force
             New-CaccaIISWebApp $testSiteName MyApp1 $childPath -AppPoolName 'AnotherPool'
             New-CaccaIISWebApp $testSiteName MyApp2 $child2Path
@@ -258,7 +258,7 @@ Describe 'Get-IISSiteAclPath' {
             Start-IISCommitDelay
             $site.Applications['/'].ApplicationPoolName = 'temp-pool'
             Stop-IISCommitDelay
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
 
             New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -Force -AppPoolName $testAppPoolName
 

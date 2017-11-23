@@ -19,9 +19,9 @@ Describe 'Remove-IISAppPool' {
             Where-Object { $_.IsInherited -eq $false -and $_.IdentityReference -eq $Username }
     }
 
-    AfterEach {
-        Reset-IISServerManager -Confirm:$false
-    }
+    # AfterEach {
+    #     Reset-IISServerManager -Confirm:$false
+    # }
 
     It 'Should throw if pool does not exist' {
         {Remove-CaccaIISAppPool 'DoesNotExist' -EA Stop} | Should Throw
@@ -79,7 +79,7 @@ Describe 'Remove-IISAppPool' {
     Context 'Existing pool in use by Web app' {
 
         function Cleanup {
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 

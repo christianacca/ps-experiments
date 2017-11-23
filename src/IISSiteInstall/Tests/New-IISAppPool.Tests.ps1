@@ -14,13 +14,13 @@ Describe 'New-IISAppPool' {
             $testLocalUser = 'PesterTestUser'
             $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
             Get-IISAppPool $tempAppPool -WA SilentlyContinue | Remove-CaccaIISAppPool
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
         }
     
         AfterEach {
             Get-IISAppPool $tempAppPool | Remove-CaccaIISAppPool
             Get-LocalUser $testLocalUser -EA SilentlyContinue | Remove-LocalUser
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
         }
     
         It "Can create with sensible defaults" {
@@ -29,7 +29,7 @@ Describe 'New-IISAppPool' {
             New-CaccaIISAppPool $tempAppPool
     
             # then
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             [Microsoft.Web.Administration.ApplicationPool] $pool = Get-IISAppPool $tempAppPool
             $pool.Enable32BitAppOnWin64 | Should -Be $true
             $pool.Name | Should -Be $tempAppPool
@@ -43,7 +43,7 @@ Describe 'New-IISAppPool' {
             }
             
             # then
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             (Get-IISAppPool $tempAppPool).Enable32BitAppOnWin64 | Should -Be $false
         }
     
@@ -57,7 +57,7 @@ Describe 'New-IISAppPool' {
             New-CaccaIISAppPool $tempAppPool $creds
             
             # then
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser
         }
     }
@@ -65,14 +65,14 @@ Describe 'New-IISAppPool' {
     Context 'App pool already exists' {
 
         BeforeEach {
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $tempAppPool -Force -AppPoolConfig {
                 $_.Enable32BitAppOnWin64 = $false
             }
         }
 
         AfterEach {
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -WA SilentlyContinue -Confirm:$false
         }
 
@@ -87,7 +87,7 @@ Describe 'New-IISAppPool' {
             }
             
             # then
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             (Get-IISAppPool $tempAppPool).Enable32BitAppOnWin64 | Should -Be $true
         }
 
@@ -98,7 +98,7 @@ Describe 'New-IISAppPool' {
             }
             
             # then
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             [Microsoft.Web.Administration.Site] $site = Get-IISSite $testSiteName
             $site.Applications["/"].ApplicationPoolName | Should -Be $tempAppPool
         }

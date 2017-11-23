@@ -340,7 +340,7 @@ Describe 'New-IISWebApp' {
             }
 
             # then
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
             $app = (Get-IISSite $testSiteName).Applications[$appName]
             $app.ApplicationPoolName | Should -Be $newPoolName
             $pool = Get-IISAppPool $newPoolName
@@ -379,7 +379,7 @@ Describe 'New-IISWebApp' {
         }
     
         AfterAll {
-            Reset-IISServerManager -Confirm:$false
+            # Reset-IISServerManager -Confirm:$false
         }
 
         It 'Should NOT have created child app' {

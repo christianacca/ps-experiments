@@ -20,7 +20,7 @@ Describe 'Remove-IISWebApp' {
     }
 
     BeforeAll {
-        Reset-IISServerManager -Confirm:$false
+        # Reset-IISServerManager -Confirm:$false
         # given
         $sitePath = "$TestDrive\$testSiteName"
         New-CaccaIISWebsite $testSiteName $sitePath -AppPoolName $testAppPoolName -Force
