@@ -1,8 +1,12 @@
 function Set-IISAppPoolUser {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName='None')]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ParameterSetName = 'SpecificUser', Position = 0)]
         [PsCredential] $Credential,
+
+        [Parameter(Mandatory, ParameterSetName = 'CommonIdentity', Position = 0)]
+        [ValidateSet('ApplicationPoolIdentity', 'LocalService', 'LocalSystem', 'NetworkService')]
+        [string] $IdentityType,
 
         [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNull()]
@@ -20,6 +24,12 @@ function Set-IISAppPoolUser {
     
     process {
         try {
+
+            if ($PSCmdlet.ParameterSetName -eq 'CommonIdentity') {
+                $dummyPassword = ConvertTo-SecureString 'dummy' -AsPlainText -Force
+                $username = ConvertTo-BuiltInUsername $IdentityType ($InputObject.Name)
+                $Credential = [PsCredential]::new($username, $dummyPassword)
+            }
 
             if ($Commit) {
                 Start-IISCommitDelay

@@ -57,6 +57,46 @@ Describe 'New-IISAppPool' {
             # then
             Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be $domainQualifiedTestLocalUser
         }
+
+        It "Can create with explicitly with ApplicationPoolIdentity" {    
+            # when
+            New-CaccaIISAppPool $tempAppPool -Config {
+                $_ | Set-CaccaIISAppPoolUser -IdentityType ApplicationPoolIdentity
+            }
+            
+            # then
+            Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be "IIS AppPool\$tempAppPool"
+        }
+
+        It "Can create with explicitly with NetworkService" {    
+            # when
+            New-CaccaIISAppPool $tempAppPool -Config {
+                $_ | Set-CaccaIISAppPoolUser -IdentityType NetworkService
+            }
+            
+            # then
+            Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be 'NT AUTHORITY\NETWORK SERVICE'
+        }
+        
+        It "Can create with explicitly with LocalSystem" {    
+            # when
+            New-CaccaIISAppPool $tempAppPool -Config {
+                $_ | Set-CaccaIISAppPoolUser -IdentityType LocalSystem
+            }
+            
+            # then
+            Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be 'NT AUTHORITY\SYSTEM'
+        }
+        
+        It "Can create with explicitly with LocalService" {    
+            # when
+            New-CaccaIISAppPool $tempAppPool -Config {
+                $_ | Set-CaccaIISAppPoolUser -IdentityType LocalService
+            }
+            
+            # then
+            Get-IISAppPool $tempAppPool | Get-CaccaIISAppPoolUsername | Should -Be 'NT AUTHORITY\LOCAL SERVICE'
+        }
     }
 
     Context 'App pool already exists' {
