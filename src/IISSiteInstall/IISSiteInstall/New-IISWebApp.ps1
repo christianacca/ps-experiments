@@ -19,7 +19,7 @@ function New-IISWebApp {
         [string] $AppPoolName,
 
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string] $AppPoolIdentity,
+        [PsCredential] $Credential,
 
         [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
@@ -95,14 +95,15 @@ function New-IISWebApp {
 
             Start-IISCommitDelay
 
+            $appPoolIdentity = ''
             try {
                 if (-not(Get-IISAppPool $AppPoolName -WA SilentlyContinue)) {
-                    New-IISAppPool $AppPoolName $AppPoolIdentity -Commit:$false | Out-Null
+                    New-IISAppPool $AppPoolName $Credential -Commit:$false | Out-Null
                 }
 
                 $pool = Get-IISAppPool $AppPoolName
 
-                $AppPoolIdentity = $pool | Get-IISAppPoolUsername
+                $appPoolIdentity = $pool | Get-IISAppPoolUsername
 
                 if ($AppPoolConfig) {
                     # note: assumed that 'AppPoolConfig' will NOT change the identity assigned to App Pool
@@ -130,7 +131,7 @@ function New-IISWebApp {
             else {
                 $appAclParams = @{
                     AppPath         = $childPath
-                    AppPoolIdentity = $AppPoolIdentity
+                    AppPoolIdentity = $appPoolIdentity
                     ModifyPaths     = $ModifyPaths
                     ExecutePaths    = $ExecutePaths
                 }

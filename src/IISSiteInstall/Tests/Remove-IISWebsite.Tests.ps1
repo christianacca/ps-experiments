@@ -85,9 +85,11 @@ Describe 'Remove-IISWebsite' {
 
             $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
             $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
-            New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+            $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
+            $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
+            New-LocalUser $testLocalUser -Password $pswd
 
-            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool -AppPoolIdentity $domainQualifiedTestLocalUser
+            New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool -Credential $creds
         
 
             # when

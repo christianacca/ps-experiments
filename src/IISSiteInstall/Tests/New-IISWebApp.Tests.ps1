@@ -206,20 +206,22 @@ Describe 'New-IISWebApp' {
         }
     }
 
-    Context '-AppPoolIdentity' {
+    Context '-Credential' {
         BeforeAll {
             # given...
 
             $testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
             $domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
-            New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+            $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
+            $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
+            New-LocalUser $testLocalUser -Password $pswd
 
             $appPoolName = 'NonSharedPool86'
             $appName = '/MyApp'
 
 
             # when
-            New-CaccaIISWebApp $testSiteName $appName -AppPoolName  $appPoolName -AppPoolIdentity $domainQualifiedTestLocalUser
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName  $appPoolName -Credential $creds
 
             $app = (Get-IISSite $testSiteName).Applications[$appName]
         }

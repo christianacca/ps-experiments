@@ -49,10 +49,12 @@ Describe 'New-IISAppPool' {
     
         It "Can create with specific user account" {
             # given
-            New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
+            $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
+            $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
+            New-LocalUser $testLocalUser -Password $pswd
     
             # when
-            New-CaccaIISAppPool $tempAppPool $domainQualifiedTestLocalUser
+            New-CaccaIISAppPool $tempAppPool $creds
             
             # then
             Reset-IISServerManager -Confirm:$false

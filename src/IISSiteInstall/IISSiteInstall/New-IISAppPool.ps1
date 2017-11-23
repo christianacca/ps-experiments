@@ -8,7 +8,7 @@ function New-IISAppPool {
         [string] $Name,
 
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string] $AppPoolIdentity,
+        [PSCredential] $Credential,
 
         [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $Config,
@@ -56,9 +56,8 @@ function New-IISAppPool {
                 if ($PSCmdlet.ShouldProcess($Name, 'Create App pool')) {
                     [Microsoft.Web.Administration.ApplicationPool] $pool = $manager.ApplicationPools.Add($Name)
 
-                    if (![string]::IsNullOrWhiteSpace($AppPoolIdentity)) {
-                        $pool.ProcessModel.UserName = $AppPoolIdentity
-                        $pool.ProcessModel.IdentityType = 'SpecificUser'
+                    if ($Credential) {
+                        Set-IISAppPoolUser $pool $Credential
                     }
 
                     # todo: do NOT set this when it's detected that OS is 64bit onlys

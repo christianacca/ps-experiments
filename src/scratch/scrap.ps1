@@ -1,31 +1,43 @@
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
+$pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
+$localSysCreds = [pscredential]::new('NT AUTHORITY\LOCAL SYSTEM')
+
+$localSysCreds.UserName
+
 $testSiteName = "Scrap-$(New-Guid)"
 $testSitePath = "C:\inetpub\sites\$testSiteName"
 $testAppPoolName = "$testSiteName-AppPool"
 $testAppPoolUsername = "IIS AppPool\$testAppPoolName"
 $testLocalUser = 'PesterTestUser'
+$domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
 
 Reset-IISServerManager -Confirm:$false
-New-CaccaIISAppPool 'DeleteMePlease' -AppPoolIdentity 'BSW\ccrowhurst' -Force
+# New-CaccaIISAppPool 'DeleteMePlease' -AppPoolIdentity 'BSW\ccrowhurst' -Force
 
 try {
+    $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
+    $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
     $user = try {
         Get-LocalUser $testLocalUser -EA Stop
     }
     catch {
-        New-LocalUser $testLocalUser -Password (ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force)
-    } 
+        New-LocalUser $testLocalUser -Password $pswd
+    }
+    New-CaccaIISAppPool 'DeleteMePlease' $creds -Force
+
+
+
     # New-CaccaIISWebsite $testSiteName -Force -AppPoolIdentity $testLocalUser
-    New-CaccaIISWebsite $testSiteName -Force -AppPoolIdentity "$($env:COMPUTERNAME)\$testLocalUser"
-    (Get-Item $testSitePath).GetAccessControl('Access').Access | ? IsInherited -eq $false | Select -Exp IdentityReference -Unique        
-    Get-CaccaIISSiteAclPath $testSiteName
+    # New-CaccaIISWebsite $testSiteName -Force -AppPoolIdentity "$($env:COMPUTERNAME)\$testLocalUser"
+    # (Get-Item $testSitePath).GetAccessControl('Access').Access | ? IsInherited -eq $false | Select -Exp IdentityReference -Unique        
+    # Get-CaccaIISSiteAclPath $testSiteName
 }
 finally {
-    Remove-CaccaIISWebsite $testSiteName
+    # Remove-CaccaIISWebsite $testSiteName
     Get-LocalUser $testLocalUser | Remove-LocalUser
-    Remove-Item $testSitePath
+    # Remove-Item $testSitePath
 }
 
 (Get-IISAppPool $testAppPoolName).ProcessModel
