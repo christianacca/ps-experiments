@@ -184,7 +184,6 @@ Describe 'Remove-IISWebsite' {
             Start-IISCommitDelay
             $site.Applications['/'].ApplicationPoolName = 'temp-pool'
             Stop-IISCommitDelay
-            Reset-IISServerManager -Confirm:$false
 
             New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $test2AppPool
 
@@ -192,7 +191,6 @@ Describe 'Remove-IISWebsite' {
             $site = Get-IISSite $test2SiteName
             $site.Applications['/'].ApplicationPoolName = $test2AppPool
             Stop-IISCommitDelay
-            Reset-IISServerManager -Confirm:$false
 
             $childPath = "$TestDrive\MyApp1"
             New-CaccaIISWebApp $testSiteName MyApp1 -AppPoolName $testAppPool
