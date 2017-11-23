@@ -38,6 +38,18 @@ function New-IISWebApp {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+
+        function GetAppPoolOtherAppCount {
+            param (
+                [string] $SiteName,
+                [string] $ThisAppName,
+                [string] $AppPoolName
+            )
+            Get-IISSiteHierarchyInfo | 
+                Where-Object { $_.AppPool_Name -eq $AppPoolName -and $_.Site_Name -eq $SiteName -and $_.App_Path -ne $ThisAppName } |
+                Select-Object App_Path -Unique |
+                Measure-Object | Select-Object -Exp Count
+        }
     }
     
     process {
@@ -76,8 +88,10 @@ function New-IISWebApp {
             if ((GetAppPoolOtherSiteCount $SiteName $AppPoolName) -gt 0) {
                 throw "Cannot create Web Application - AppPool '$AppPoolName' is in use on another site"
             }
-            # todo: throw if AppPoolConfig supplied and AppPoolName exists and belongs to a App other than $Name
-            #       'Cannot configure an AppPool belong to another app or this site'
+            if ($AppPoolConfig -and (GetAppPoolOtherAppCount $SiteName $Name $AppPoolName) -gt 0) {
+                # should this be a warning instead?
+                throw "Cannot configure AppPool '$AppPoolName' - it belongs to another Web Application and/or this site"
+            }
 
             $childPath = if ([string]::IsNullOrWhiteSpace($Path)) {
                 $sitePath = $rootApp.VirtualDirectories['/'].PhysicalPath

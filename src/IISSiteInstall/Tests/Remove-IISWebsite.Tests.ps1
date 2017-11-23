@@ -170,17 +170,39 @@ Describe 'Remove-IISWebsite' {
     Context "Site and child app - shared app pool" {
 
         BeforeAll {
-            # given
             Cleanup
-            New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -AppPoolName $test2AppPool -Port 3564
-            $childPath = "$TestDrive\MyApp1"
+
+            # given...
+
+            # note: we're needing to "manually" setup this condition as 'New-CaccaIISWebsite' would otherwise
+            #       prevent it
+
+            New-CaccaIISAppPool 'temp-pool'
+            
+            $site = New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -AppPoolName $test2AppPool -Port 3564
+
+            Start-IISCommitDelay
+            $site.Applications['/'].ApplicationPoolName = 'temp-pool'
+            Stop-IISCommitDelay
+            Reset-IISServerManager -Confirm:$false
+
             New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $test2AppPool
+
+            Start-IISCommitDelay
+            $site = Get-IISSite $test2SiteName
+            $site.Applications['/'].ApplicationPoolName = $test2AppPool
+            Stop-IISCommitDelay
+            Reset-IISServerManager -Confirm:$false
+
+            $childPath = "$TestDrive\MyApp1"
             New-CaccaIISWebApp $testSiteName MyApp1 -AppPoolName $testAppPool
+
 
             # checking assumptions
             GetAppPoolPermission "$TestDrive\Site2" $test2AppPoolUsername | Should -Not -BeNullOrEmpty
             GetAppPoolPermission $TestDrive $test2AppPoolUsername | Should -Not -BeNullOrEmpty
             GetAppPoolPermission $childPath $testAppPoolUsername | Should -Not -BeNullOrEmpty
+
 
             # when
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
@@ -188,6 +210,7 @@ Describe 'Remove-IISWebsite' {
                 
         AfterAll {
             Cleanup
+            Remove-CaccaIISAppPool 'temp-pool'
         }
         
         It 'Should remove site except share app pool' {

@@ -303,6 +303,14 @@ Describe 'New-IISWebApp' {
         }
     }
 
+    Context '-AppPoolConfig, when pool assigned to site' {
+
+        It 'Should throw' {
+            # then
+            {New-CaccaIISWebApp $testSiteName MyApp -AppPoolConfig {} -EA Stop} | Should Throw
+        }
+    }
+
     Context 'App already exists' {
 
         BeforeEach {
@@ -326,15 +334,18 @@ Describe 'New-IISWebApp' {
 
         It '-Force should replace existing app' {
             # when
-            New-CaccaIISWebApp $testSiteName $appName -EA Stop -Force -AppPoolConfig {
+            $newPoolName = 'NewPool32698'
+            New-CaccaIISWebApp $testSiteName $appName -AppPoolName $newPoolName -Force -EA Stop -AppPoolConfig {
                 $_.ManagedRuntimeVersion = 'v1.1'
             }
 
             # then
+            Reset-IISServerManager -Confirm:$false
             $app = (Get-IISSite $testSiteName).Applications[$appName]
-            $app.ApplicationPoolName | Should -Be $testAppPoolName
-            $pool = Get-IISAppPool $testAppPoolName
+            $app.ApplicationPoolName | Should -Be $newPoolName
+            $pool = Get-IISAppPool $newPoolName
             $pool.ManagedRuntimeVersion | Should -Be 'v1.1'
+            Get-IISAppPool $appPoolName | Should -BeNullOrEmpty
         }
     }
     
@@ -356,6 +367,7 @@ Describe 'New-IISWebApp' {
         }
     }
 
+    
     Context '-WhatIf' {
         BeforeAll {
             # given

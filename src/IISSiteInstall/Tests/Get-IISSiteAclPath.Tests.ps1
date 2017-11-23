@@ -247,14 +247,31 @@ Describe 'Get-IISSiteAclPath' {
     Context '2 sites with overlapping paths and shared AppPool identities' {
 
         BeforeAll {
-            # given
-            New-CaccaIISWebsite $testSiteName $TestDrive -Force -AppPoolName $testAppPoolName -Port 3333
+            # given...
+
+            # note: we're needing to "manually" setup this condition as 'New-CaccaIISWebsite' would otherwise
+            #       prevent it
+            New-CaccaIISAppPool 'temp-pool'
+
+            $site = New-CaccaIISWebsite $testSiteName $TestDrive -Force -AppPoolName $testAppPoolName -Port 3333
+
+            Start-IISCommitDelay
+            $site.Applications['/'].ApplicationPoolName = 'temp-pool'
+            Stop-IISCommitDelay
+            Reset-IISServerManager -Confirm:$false
+
             New-CaccaIISWebsite $test2SiteName "$TestDrive\Site2" -Force -AppPoolName $testAppPoolName
+
+            Start-IISCommitDelay
+            $site = Get-IISSite $testSiteName
+            $site.Applications['/'].ApplicationPoolName = $testAppPoolName
+            Stop-IISCommitDelay
         }
 
         AfterAll {
             Remove-CaccaIISWebsite $test2SiteName -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+            Remove-CaccaIISAppPool 'temp-pool'
         }
 
         Context 'No Name filter' {
