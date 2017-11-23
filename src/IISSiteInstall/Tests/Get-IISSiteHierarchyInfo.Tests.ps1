@@ -20,7 +20,6 @@ Describe 'Get-IISSiteHierarchyInfo' {
         }
 
         AfterAll {
-            # Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 
@@ -48,13 +47,11 @@ Describe 'Get-IISSiteHierarchyInfo' {
     Context 'Site missing AppPool' {
         
         BeforeAll {
-            # Reset-IISServerManager -Confirm:$false
             New-CaccaIISWebsite $testSiteName $TestDrive -Force
             Remove-CaccaIISAppPool $tempAppPool -Force
         }
         
         AfterAll {
-            # Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
         
@@ -84,7 +81,6 @@ Describe 'Get-IISSiteHierarchyInfo' {
         }
         
         AfterAll {
-            # Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
             Remove-CaccaIISWebsite $test2SiteName -Confirm:$false
         }
@@ -109,7 +105,6 @@ Describe 'Get-IISSiteHierarchyInfo' {
         }
 
         AfterAll {
-            # Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 

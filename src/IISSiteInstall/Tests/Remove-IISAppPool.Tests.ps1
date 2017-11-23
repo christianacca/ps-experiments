@@ -79,7 +79,6 @@ Describe 'Remove-IISAppPool' {
     Context 'Existing pool in use by Web app' {
 
         function Cleanup {
-            # Reset-IISServerManager -Confirm:$false
             Remove-CaccaIISWebsite $testSiteName -Confirm:$false
         }
 
