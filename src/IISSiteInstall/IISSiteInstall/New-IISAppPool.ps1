@@ -57,14 +57,13 @@ function New-IISAppPool {
                     [Microsoft.Web.Administration.ApplicationPool] $pool = $manager.ApplicationPools.Add($Name)
 
                     if ($Credential) {
-                        Set-IISAppPoolUser $pool $Credential
+                        Set-IISAppPoolUser $pool $Credential -Commit:$false
                     }
 
                     # todo: do NOT set this when it's detected that OS is 64bit onlys
                     $pool.Enable32BitAppOnWin64 = $true # this IS the recommended default even for 64bit servers
 
                     $pool | ForEach-Object $Config
-                    $pool
                 }
                 if ($Commit) {
                     Stop-IISCommitDelay
@@ -76,7 +75,14 @@ function New-IISAppPool {
                 }
                 throw
             }
+            finally {
+                if ($Commit) {
+                    # make sure subsequent scripts will not fail because the ServerManger is now readonly
+                    Reset-IISServerManager -Confirm:$false
+                }
+            }
 
+            Get-IISAppPool $Name
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

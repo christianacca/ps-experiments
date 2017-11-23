@@ -87,7 +87,7 @@ function Remove-IISWebApp {
                 throw
             }
             finally {
-                Reset-IISServerManager -Confirm:$false -WhatIf:$false
+                Reset-IISServerManager -Confirm:$false
             }
         }
         catch {

@@ -37,7 +37,7 @@ function Remove-IISAppPool {
     
     process {
         try {
-            
+
             [Microsoft.Web.Administration.ServerManager] $manager = Get-IISServerManager
 
             $pool = if ($InputObject) {
@@ -95,6 +95,12 @@ function Remove-IISAppPool {
                     Stop-IISCommitDelay -Commit:$false
                 }
                 throw
+            }
+            finally {
+                if ($Commit) {
+                    # make sure subsequent scripts will not fail because the ServerManger is now readonly
+                    Reset-IISServerManager -Confirm:$false
+                }
             }
 
         }

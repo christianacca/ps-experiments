@@ -46,7 +46,7 @@ function Remove-IISWebsite {
                 throw
             }
             finally {
-                Reset-IISServerManager -Confirm:$false -WhatIf:$false
+                Reset-IISServerManager -Confirm:$false
             }
 
         }

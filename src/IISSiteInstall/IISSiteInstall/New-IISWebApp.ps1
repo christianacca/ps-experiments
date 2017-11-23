@@ -142,7 +142,7 @@ function New-IISWebApp {
                 throw
             }
             finally {
-                Reset-IISServerManager -Confirm:$false -WhatIf:$false
+                Reset-IISServerManager -Confirm:$false
             }
 
             if ($WhatIfPreference -eq $true -and !$isPathExists) {
