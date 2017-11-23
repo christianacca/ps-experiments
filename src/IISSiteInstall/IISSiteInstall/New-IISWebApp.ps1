@@ -73,6 +73,12 @@ function New-IISWebApp {
                 $AppPoolName = $rootApp.ApplicationPoolName
             }
 
+            if ((GetAppPoolOtherSiteCount $SiteName $AppPoolName) -gt 0) {
+                throw "Cannot create Web Application - AppPool '$AppPoolName' is in use on another site"
+            }
+            # todo: throw if AppPoolConfig supplied and AppPoolName exists and belongs to a App other than $Name
+            #       'Cannot configure an AppPool belong to another app or this site'
+
             $childPath = if ([string]::IsNullOrWhiteSpace($Path)) {
                 $sitePath = $rootApp.VirtualDirectories['/'].PhysicalPath
                 Join-Path $sitePath $Name

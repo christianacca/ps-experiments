@@ -63,7 +63,7 @@ function Remove-IISWebApp {
                 ExecutePaths        = $ExecutePaths
                 SkipMissingPaths    = $true
                 # file permissions for Temp AP.Net Files folders *might* be shared so must skip removing these
-                # cleaning up orphaned file permissions will happen below when 'Remove-IISAppPool' is run
+                # cleaning up of orphaned file permissions will happen below when 'Remove-IISAppPool' is run
                 SkipTempAspNetFiles = $true
             }
             Remove-CaccaIISSiteAcl @aclInfo

@@ -220,4 +220,21 @@ Describe 'New-IISWebsite' {
         Get-IISAppPool 'MyAppPool' -WA SilentlyContinue | Should -BeNullOrEmpty
         Test-Path $tempSitePath | Should -Be $false
     }
+
+    Context 'AppPool already assigned to another site' {
+
+        BeforeEach {
+            # given
+            New-CaccaIISWebsite 'AnotherSite' "$TestDrive\AnotherSite" -Port 692 -AppPoolName $testAppPoolName
+        }
+
+        AfterEach {
+            Remove-CaccaIISWebsite 'AnotherSite'
+        }
+
+        It 'Should throw' {
+            # when, then
+            { New-CaccaIISWebsite $testSiteName "$TestDrive\$testSiteName" -EA Stop } | Should Throw
+        }
+    }
 }

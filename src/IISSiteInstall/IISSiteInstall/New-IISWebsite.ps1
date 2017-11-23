@@ -74,7 +74,11 @@ function New-IISWebsite {
             
             $existingSite = Get-IISSite $Name -WA SilentlyContinue
             if ($existingSite -and !$Force) {
-                throw "Site already exists. To overwrite you must supply -Force"
+                throw "Cannot create site - site '$Name' already exists. To overwrite you must supply -Force"
+            }
+
+            if ((GetAppPoolOtherSiteCount $Name $AppPoolName) -gt 0) {
+                throw "Cannot create site - AppPool '$AppPoolName' is in use on another site"
             }
 
             $isPathExists = Test-Path $Path

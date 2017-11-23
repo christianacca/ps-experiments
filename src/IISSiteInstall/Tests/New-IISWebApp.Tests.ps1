@@ -337,6 +337,24 @@ Describe 'New-IISWebApp' {
             $pool.ManagedRuntimeVersion | Should -Be 'v1.1'
         }
     }
+    
+    Context 'AppPool already assigned to another site' {
+        
+        BeforeAll {
+            # given
+            $appPoolName = 'AnotherSiteAppPool345457'
+            New-CaccaIISWebsite 'AnotherSite' "$TestDrive\AnotherSite" -Port 1589 -AppPoolName $appPoolName
+        }
+        
+        AfterAll {
+            Remove-CaccaIISWebsite 'AnotherSite'
+        }
+        
+        It 'Should throw' {
+            # when, then
+            { New-CaccaIISWebApp $testSiteName MyApp -AppPoolName $appPoolName -EA Stop } | Should Throw
+        }
+    }
 
     Context '-WhatIf' {
         BeforeAll {
