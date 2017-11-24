@@ -5,7 +5,9 @@ function Remove-IISWebsite {
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [string] $Name
+        [string] $Name,
+
+        [switch] $KeepHostsFileEntry
     )
     
     begin {
@@ -28,6 +30,10 @@ function Remove-IISWebsite {
             }
 
             Get-IISSiteAclPath $Name -Recurse | Where-Object IsShared -eq $false | Remove-CaccaUserFromAcl
+
+            if (!$KeepHostsFileEntry) {
+                Get-IISSiteHostsFileEntry $Name | Where-Object IsShared -eq $false | Remove-IISSiteHostsFileEntry
+            }
 
             Start-IISCommitDelay
             try {

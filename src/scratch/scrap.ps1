@@ -1,32 +1,20 @@
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
-$pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
-$localSysCreds = [pscredential]::new('NT AUTHORITY\LOCAL SYSTEM')
-
-$localSysCreds.UserName
 
 $testSiteName = "Scrap-$(New-Guid)"
 $testSitePath = "C:\inetpub\sites\$testSiteName"
 $testAppPoolName = "$testSiteName-AppPool"
 $testAppPoolUsername = "IIS AppPool\$testAppPoolName"
-$testLocalUser = 'PesterTestUser'
-$domainQualifiedTestLocalUser = "$($env:COMPUTERNAME)\$testLocalUser"
 
 Reset-IISServerManager -Confirm:$false
-# New-CaccaIISAppPool 'DeleteMePlease' -AppPoolIdentity 'BSW\ccrowhurst' -Force
 
 try {
-    $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
-    $creds = [PsCredential]::new($domainQualifiedTestLocalUser, $pswd)
-    $user = try {
-        Get-LocalUser $testLocalUser -EA Stop
-    }
-    catch {
-        New-LocalUser $testLocalUser -Password $pswd
-    }
-    New-CaccaIISAppPool 'DeleteMePlease' $creds -Force
 
+    Get-IISSite 'Scrap-defa3fe4-cc70-4c0f-8d12-73151190d50e' | Select-Object -Exp Bindings
+
+    New-CaccaIISWebsite $testSiteName | Out-Null
+    Get-IISSite | Select-Object -PV
 
 
     # New-CaccaIISWebsite $testSiteName -Force -AppPoolIdentity $testLocalUser
@@ -35,12 +23,11 @@ try {
     # Get-CaccaIISSiteAclPath $testSiteName
 }
 finally {
-    # Remove-CaccaIISWebsite $testSiteName
-    Get-LocalUser $testLocalUser | Remove-LocalUser
-    # Remove-Item $testSitePath
+    Remove-CaccaIISWebsite $testSiteName
+    Remove-Item $testSitePath
 }
 
-(Get-IISAppPool $testAppPoolName).ProcessModel
+# (Get-IISAppPool $testAppPoolName).ProcessModel
 
 
 # $subFolder = Join-Path $childPath 'SubPath1'

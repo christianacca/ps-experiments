@@ -30,13 +30,13 @@ Describe "General project validation: $moduleName" {
         Install-Module IISAdministration -RequiredVersion '1.1.0.0'
         Install-Module PreferenceVariables -RequiredVersion '1.0'
         Install-Module IISSecurity -RequiredVersion '0.1.0'
-        Install-Module IISConfigUnlock -RequiredVersion '0.1.0'
-        # Module and it's dependencies not already loaded into memory
-        Get-Module IISSecurity -All | Remove-Module
-        Get-Module IISConfigUnlock -All | Remove-Module
-        Get-Module IISAdministration -All | Remove-Module
-        Get-Module PreferenceVariables -All | Remove-Module
-        Get-Module $moduleName -All | Remove-Module
+        Install-Module HostNameUtils -RequiredVersion '1.0.0'
+        # Ensure module and it's dependencies NOT already loaded into memory
+        Get-Module IISSecurity -All | Remove-Module -Force
+        Get-Module HostNameUtils -All | Remove-Module -Force
+        Get-Module IISAdministration -All | Remove-Module -Force
+        Get-Module PreferenceVariables -All | Remove-Module -Force
+        Get-Module $moduleName -All | Remove-Module -Force
 
         # when
         Import-Module $modulePath
@@ -45,6 +45,6 @@ Describe "General project validation: $moduleName" {
         Get-Module IISAdministration | Should -Not -Be $null
         Get-Module PreferenceVariables | Should -Not -Be $null
         Get-Module IISSecurity | Should -Not -Be $null
-        Get-Module IISConfigUnlock | Should  -Not -Be $null
+        Get-Module HostNameUtils | Should -Not -Be $null
     }
 }
