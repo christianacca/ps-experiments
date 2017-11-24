@@ -231,3 +231,52 @@ Describe 'Remove-IISWebsite' {
         }
     }
 }
+    
+InModuleScope $moduleName {
+    
+    Describe 'Remove-IISWebsite' -Tag Unit {
+    
+        BeforeAll {
+            # given
+            $testSiteName = 'DeleteMeSite'
+            $tempSitePath = "$TestDrive\$testSiteName"
+            Mock Remove-TecBoxBackConnectionHostNames
+            Mock Add-TecBoxBackConnectionHostNames
+            Mock Get-TecBoxBackConnectionHostNames { return 'deleteme' }
+
+            New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -AddHostToBackConnections
+        }
+
+        Context 'Host registered as back connection' {
+            
+            It 'Should remove' {
+                # when
+                Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+            
+                # then
+                Assert-MockCalled Remove-TecBoxBackConnectionHostNames -Exactly 1 -Scope It `
+                    -ExclusiveFilter {$Hostnames -eq 'deleteme'}
+            }
+        }
+
+        Context 'Host registered as back connection is shared with other sites' {
+            
+            BeforeAll {
+                # given
+                New-CaccaIISWebsite AnotherSite3 $tempSitePath -Hostname deleteme -Port 8095 -AddHostToBackConnections
+            }
+
+            AfterAll {
+                Remove-CaccaIISWebsite AnotherSite3 -Confirm:$false
+            }
+
+            It 'Should NOT remove' {
+                # when
+                Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+            
+                # then
+                Assert-MockCalled Remove-TecBoxBackConnectionHostNames -Exactly 0 -Scope It
+            }
+        }
+    }
+}

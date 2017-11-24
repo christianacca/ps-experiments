@@ -250,6 +250,46 @@ InModuleScope $moduleName {
 
     Describe 'New-IISWebsite' -Tag Unit {
 
+        Context '-AddHostToBackConnections' {
+
+            BeforeAll {
+                # given
+                $testSiteName = 'DeleteMeSite'
+                $tempSitePath = "$TestDrive\$testSiteName"
+
+                Mock Add-TecBoxBackConnectionHostNames
+            }
+
+            AfterEach {
+                Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+            }
+
+            It 'Should add -Hostname to backconnections' {
+                # when
+                New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -AddHostToBackConnections
+
+                # then
+                Assert-MockCalled Add-TecBoxBackConnectionHostNames -Exactly 1 -Scope It -ExclusiveFilter {$HostNames -eq 'deleteme'}
+            }
+
+            It 'Should add host names from extra binding to backconnections' {
+                # when
+                New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -AddHostToBackConnections -SiteConfig {
+                    New-IISSiteBinding $_.Name ':8082:deleteme2' http
+                }
+        
+                # then
+                Assert-MockCalled Add-TecBoxBackConnectionHostNames -Exactly 1 -Scope It -ParameterFilter {$HostNames -eq 'deleteme'}
+                Assert-MockCalled Add-TecBoxBackConnectionHostNames -Exactly 1 -Scope It -ParameterFilter {$HostNames -eq 'deleteme2'}
+            }
+        }
+    }
+}
+
+InModuleScope $moduleName {
+
+    Describe 'New-IISWebsite' -Tag Unit {
+
         Context '-HostsFileIPAddress' {
 
             BeforeAll {

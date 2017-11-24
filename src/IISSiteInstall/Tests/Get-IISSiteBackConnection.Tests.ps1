@@ -11,7 +11,7 @@ InModuleScope $moduleName {
     $testSiteName = 'DeleteMeSite'
     $test2SiteName = 'DeleteMeSite2'
 
-    Describe 'Get-IISWebsiteHostsFileEntry' {
+    Describe 'Get-IISSiteBackConnection' {
         Context 'One Website' {
             
             BeforeAll {
@@ -23,24 +23,21 @@ InModuleScope $moduleName {
                 Remove-CaccaIISWebsite $testSiteName
             }
     
-            Context 'site has one hostname in hosts file' {
+            Context 'site has one back connection' {
     
                 BeforeAll {
                     # given
-                    Mock Get-TecBoxHostnames {
-                        [PsCustomObject]@{ Hostname = 'myhostname'; IpAddress = '127.0.0.1' } 
-                    }
+                    Mock Get-TecBoxBackConnectionHostNames { return 'myhostname' }
                 }
     
-                It 'Should return host file entry' {
+                It 'Should return back connection entry' {
                     
                     # when
-                    $entries = Get-CaccaIISSiteHostsFileEntry -Name $testSiteName
+                    $entries = Get-CaccaIISSiteBackConnection -Name $testSiteName
                     
                     # then
                     $expected = [PsCustomObject]@{
                         Hostname  = 'myhostname'
-                        IpAddress = '127.0.0.1'
                         SiteName  = $testSiteName
                         IsShared  = $false
                     }
@@ -49,24 +46,24 @@ InModuleScope $moduleName {
                 }
             }
     
-            Context 'hostname NOT in hosts file' {
+            Context 'no back connection' {
                 
                 BeforeAll {
                     # given
-                    Mock Get-TecBoxHostnames { }
+                    Mock Get-TecBoxBackConnectionHostNames { }
                 }
     
                 It 'Should NOT return any entries' {
                     
                     # when
-                    $entries = Get-CaccaIISSiteHostsFileEntry -Name $testSiteName
+                    $entries = Get-CaccaIISSiteBackConnection -Name $testSiteName
                     
                     # then
                     ($entries | Measure-Object).Count | Should -Be 0
                 }
             }
     
-            Context 'site has multiple hostnames in hosts file' {
+            Context 'site has multiple back connections' {
                 
                 BeforeAll {
     
@@ -74,9 +71,9 @@ InModuleScope $moduleName {
                     
                     New-IISSiteBinding $testSiteName '*:8080:myotherhostname' -Protocol http
     
-                    Mock Get-TecBoxHostnames {
-                        [PsCustomObject]@{ Hostname = 'myhostname'; IpAddress = '127.0.0.1' } 
-                        [PsCustomObject]@{ Hostname = 'myotherhostname'; IpAddress = '127.0.0.1' } 
+                    Mock Get-TecBoxBackConnectionHostNames {
+                        'myhostname'
+                        'myotherhostname'
                     }
                 }
     
@@ -84,20 +81,18 @@ InModuleScope $moduleName {
                     Remove-IISSiteBinding $testSiteName '*:8080:myotherhostname' -Protocol http -Confirm:$false
                 }
     
-                It 'Should return each hosts file entry' {
+                It 'Should return each back connection entry' {
                     
                     # when
-                    $entries = Get-CaccaIISSiteHostsFileEntry -Name $testSiteName
+                    $entries = Get-CaccaIISSiteBackConnection -Name $testSiteName
                     
                     # then
                     $expected = @([PsCustomObject]@{
                             Hostname  = 'myhostname'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $testSiteName
                             IsShared  = $false
                         }, [PsCustomObject]@{
                             Hostname  = 'myotherhostname'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $testSiteName
                             IsShared  = $false
                         })
@@ -121,29 +116,27 @@ InModuleScope $moduleName {
                 Remove-CaccaIISWebsite $test2SiteName
             }
     
-            Context 'each site has one hostname in hosts file' {
+            Context 'each site has one back connection' {
                 BeforeAll {
                     # given
-                    Mock Get-TecBoxHostnames {
-                        [PsCustomObject]@{ Hostname = 'myhostname'; IpAddress = '127.0.0.1' } 
-                        [PsCustomObject]@{ Hostname = 'othersite'; IpAddress = '127.0.0.1' } 
+                    Mock Get-TecBoxBackConnectionHostNames {
+                        'myhostname'
+                        'othersite'
                     }
                 }
     
-                It 'Should return host file entry' {
+                It 'Should return back connection entry for each site' {
                     
                     # when
-                    $entries = Get-CaccaIISSiteHostsFileEntry
+                    $entries = Get-CaccaIISSiteBackConnection
                     
                     # then
                     $expected = @([PsCustomObject]@{
                             Hostname  = 'myhostname'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $testSiteName
                             IsShared  = $false
                         }, [PsCustomObject]@{
                             Hostname  = 'othersite'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $test2SiteName
                             IsShared  = $false
                         })
@@ -153,23 +146,22 @@ InModuleScope $moduleName {
                 }
             }
     
-            Context 'only one site has a hostname in hosts file' {
+            Context 'only one site has a back connection' {
                 BeforeAll {
                     # given
-                    Mock Get-TecBoxHostnames {
-                        [PsCustomObject]@{ Hostname = 'othersite'; IpAddress = '127.0.0.1' } 
+                    Mock Get-TecBoxBackConnectionHostNames {
+                        'othersite'
                     }
                 }
     
-                It 'Should return host file entry' {
+                It 'Should return back connection entry for one site' {
                     
                     # when
-                    $entries = Get-CaccaIISSiteHostsFileEntry
+                    $entries = Get-CaccaIISSiteBackConnection
                     
                     # then
                     $expected = [PsCustomObject]@{
                         Hostname  = 'othersite'
-                        IpAddress = '127.0.0.1'
                         SiteName  = $test2SiteName
                         IsShared  = $false
                     }
@@ -178,13 +170,13 @@ InModuleScope $moduleName {
                 }
             }
     
-            Context 'each site shares multiple hostnames in hosts file' {
+            Context 'each site shares multiple back connections' {
                 BeforeAll {
                     # given...
     
-                    Mock Get-TecBoxHostnames {
-                        [PsCustomObject]@{ Hostname = 'myhostname'; IpAddress = '127.0.0.1' } 
-                        [PsCustomObject]@{ Hostname = 'othersite'; IpAddress = '127.0.0.1' } 
+                    Mock Get-TecBoxBackConnectionHostNames {
+                        'myhostname'
+                        'othersite'
                     }
     
                     New-IISSiteBinding $testSiteName '*:8080:othersite' -Protocol http
@@ -199,27 +191,23 @@ InModuleScope $moduleName {
                 It 'Should return host file entry' {
                     
                     # when
-                    $entries = Get-CaccaIISSiteHostsFileEntry
+                    $entries = Get-CaccaIISSiteBackConnection
                     
                     # then
                     $expected = @([PsCustomObject]@{
                             Hostname  = 'myhostname'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $testSiteName
                             IsShared  = $true
                         }, [PsCustomObject]@{
                             Hostname  = 'othersite'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $testSiteName
                             IsShared  = $true
                         }, [PsCustomObject]@{
                             Hostname  = 'othersite'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $test2SiteName
                             IsShared  = $true
                         }, [PsCustomObject]@{
                             Hostname  = 'myhostname'
-                            IpAddress = '127.0.0.1'
                             SiteName  = $test2SiteName
                             IsShared  = $true
                         })

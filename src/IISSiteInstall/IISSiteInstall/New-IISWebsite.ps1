@@ -38,6 +38,8 @@ function New-IISWebsite {
 
         [string] $HostsFileIPAddress,
 
+        [switch] $AddHostToBackConnections,
+
         [switch] $Force
     )
     
@@ -94,18 +96,25 @@ function New-IISWebsite {
     
                 New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false | Out-Null
     
+                $site = $null
                 if ($PSCmdlet.ShouldProcess($Name, 'Create Web Site')) {
                     $bindingInfo = "*:$($Port):$($HostName)"
                     [Microsoft.Web.Administration.Site] $site = New-IISSite $Name $Path $bindingInfo $Protocol -Passthru
                     $site.Applications["/"].ApplicationPoolName = $AppPoolName
 
                     $site | ForEach-Object $SiteConfig
+                }
 
-                    $allHostNames = $site.Bindings | Select-Object -Exp Host -Unique
-                    # todo: add -WhatIf support to Add-TecBoxHostnames
-                    if (![string]::IsNullOrWhiteSpace($HostsFileIPAddress) -and ($PSCmdlet.ShouldProcess($allHostNames, 'Add hostname'))) {
-                        $allHostNames | Add-TecBoxHostnames -IPAddress $HostsFileIPAddress
-                    }
+                $allHostNames = $site.Bindings | Select-Object -Exp Host -Unique
+
+                # todo: add -WhatIf support to Add-TecBoxHostnames
+                if (![string]::IsNullOrWhiteSpace($HostsFileIPAddress) -and $PSCmdlet.ShouldProcess($allHostNames, 'Add hosts file entry')) {
+                    $allHostNames | Add-TecBoxHostnames -IPAddress $HostsFileIPAddress
+                }
+
+                # todo: add -WhatIf support to Add-BackConnectionHostNames
+                if ($AddHostToBackConnections -and $PSCmdlet.ShouldProcess($allHostNames, 'Add back connection')) {
+                    $allHostNames | Add-TecBoxBackConnectionHostNames
                 }
     
                 Stop-IISCommitDelay

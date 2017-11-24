@@ -7,6 +7,8 @@ function Remove-IISWebsite {
         [ValidateNotNullOrEmpty()]
         [string] $Name,
 
+        [switch] $KeepBackConnection,
+
         [switch] $KeepHostsFileEntry
     )
     
@@ -35,8 +37,13 @@ function Remove-IISWebsite {
                 Get-IISSiteHostsFileEntry $Name | Where-Object IsShared -eq $false | Remove-IISSiteHostsFileEntry
             }
 
+            if (!$KeepBackConnection) {
+                Get-IISSiteBackConnection $Name | Where-Object IsShared -eq $false | Remove-IISSiteBackConnection
+            }
+
             Start-IISCommitDelay
             try {
+
                 Remove-IISSite $Name -Confirm:$false
 
                 if ($WhatIfPreference -ne $true) {
