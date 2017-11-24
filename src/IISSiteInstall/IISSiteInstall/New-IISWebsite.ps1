@@ -36,6 +36,8 @@ function New-IISWebsite {
         [Parameter(ValueFromPipelineByPropertyName)]
         [scriptblock] $AppPoolConfig,
 
+        [string] $HostsFileIPAddress,
+
         [switch] $Force
     )
     
@@ -111,6 +113,14 @@ function New-IISWebsite {
                 Reset-IISServerManager -Confirm:$false
             }
 
+            $site = Get-IISSite $Name
+
+            $hostName = $site.Bindings | Select-Object -Exp Host -Unique
+            # todo: add -WhatIf support to Add-TecBoxHostnames
+            if (![string]::IsNullOrWhiteSpace($HostsFileIPAddress) -and ($PSCmdlet.ShouldProcess($hostName, 'Add hostname'))) {
+                $hostName | Add-TecBoxHostnames -IPAddress $HostsFileIPAddress
+            }
+
             if ($WhatIfPreference -eq $true -and !$isPathExists) {
                 # Set-CaccaIISSiteAcl requires path to exist
             }
@@ -129,7 +139,7 @@ function New-IISWebsite {
                 Set-CaccaIISSiteAcl @siteAclParams
             }
 
-            Get-IISSite $Name
+            $site
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA

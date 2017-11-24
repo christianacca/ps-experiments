@@ -1,5 +1,13 @@
+$arr = $null
+
+Add-TecBoxHostnames 127.0.0.1 foo
+
+
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
+
+# Remove-CaccaIISWebsite 'Scrap-cc1326e9-65f6-4ecb-ac7f-1af480c82f06'
+# return
 
 
 $testSiteName = "Scrap-$(New-Guid)"
@@ -11,20 +19,16 @@ Reset-IISServerManager -Confirm:$false
 
 try {
 
-    Get-IISSite 'Scrap-defa3fe4-cc70-4c0f-8d12-73151190d50e' | Select-Object -Exp Bindings
+    # Get-IISSite 'Scrap-defa3fe4-cc70-4c0f-8d12-73151190d50e' | Select-Object -Exp Bindings
 
-    New-CaccaIISWebsite $testSiteName | Out-Null
-    Get-IISSite | Select-Object -PV
-
-
-    # New-CaccaIISWebsite $testSiteName -Force -AppPoolIdentity $testLocalUser
-    # New-CaccaIISWebsite $testSiteName -Force -AppPoolIdentity "$($env:COMPUTERNAME)\$testLocalUser"
-    # (Get-Item $testSitePath).GetAccessControl('Access').Access | ? IsInherited -eq $false | Select -Exp IdentityReference -Unique        
-    # Get-CaccaIISSiteAclPath $testSiteName
+    New-CaccaIISWebsite $testSiteName -HostName $testSiteName -HostsFileIPAddress '127.0.0.1' | Out-Null
+    # Get-TecBoxHostnames
+    Get-CaccaIISSiteHostsFileEntry $testSiteName
 }
 finally {
     Remove-CaccaIISWebsite $testSiteName
-    Remove-Item $testSitePath
+    # Remove-Item $testSitePath
+    # Get-TecBoxHostnames
 }
 
 # (Get-IISAppPool $testAppPoolName).ProcessModel

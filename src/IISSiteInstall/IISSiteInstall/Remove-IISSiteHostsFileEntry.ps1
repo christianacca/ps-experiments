@@ -26,10 +26,10 @@ function Remove-IISSiteHostsFileEntry {
                 throw "Cannot remove hostname(s) - one or more entries are shared by multiple sites"
             }
 
-            $hostNamesToRemove = @()
-            $hostNamesToRemove += $InputObject | Select-Object Hostname -Unique
-            if ($PSCmdlet.ShouldProcess($hostNamesToRemove, 'Remove hostname')) {
-                Remove-TecBoxHostnames $hostNamesToRemove
+            $hostName = $InputObject | Select-Object -Exp Hostname -Unique
+            # todo: add -WhatIf support to Remove-TecBoxHostnames
+            if ($PSCmdlet.ShouldProcess($hostName, 'Remove hostname')) {
+                $hostName | Remove-TecBoxHostnames
             }
             
         }

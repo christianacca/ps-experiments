@@ -14,7 +14,7 @@ Describe 'Get-IISWebsiteHostsFileEntry' {
         
         BeforeAll {
             # given
-            New-CaccaIISWebsite $testSiteName $TestDrive -HostName myhostname
+            New-CaccaIISWebsite $testSiteName $TestDrive -HostName myhostname -Force
         }
 
         AfterAll {

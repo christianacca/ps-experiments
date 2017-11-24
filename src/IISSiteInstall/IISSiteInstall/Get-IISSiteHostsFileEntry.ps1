@@ -34,7 +34,7 @@ function Get-IISSiteHostsFileEntry {
                 Get-IISSite
             }
 
-            $siteEntries = $selectedSites | Get-IISSiteHostsFileEntryHelper
+            $siteEntries = @($selectedSites | Get-IISSiteHostsFileEntryHelper)
 
             $siteEntries | ForEach-Object {
                 $entry = $_
