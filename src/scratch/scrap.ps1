@@ -1,14 +1,18 @@
-$arr = $null
-
-Add-TecBoxHostnames 127.0.0.1 foo
-
-
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
-# Remove-CaccaIISWebsite 'Scrap-cc1326e9-65f6-4ecb-ac7f-1af480c82f06'
+# $hostName = 'deleteme', 'deleteme2'
+# $hostName | Add-TecBoxHostnames -IPAddress 127.0.0.1
+
+
+# Remove-CaccaIISWebsite DeleteMeSite
 # return
 
+Get-IISSiteBinding $testSiteName
+New-IISSiteBinding $testSiteName ':8090:ano' http
+
+$names = (Get-IISSite $testSiteName).Bindings | Select-Object -Exp Host -Unique
+$names.GetType()
 
 $testSiteName = "Scrap-$(New-Guid)"
 $testSitePath = "C:\inetpub\sites\$testSiteName"
@@ -23,10 +27,10 @@ try {
 
     New-CaccaIISWebsite $testSiteName -HostName $testSiteName -HostsFileIPAddress '127.0.0.1' | Out-Null
     # Get-TecBoxHostnames
-    Get-CaccaIISSiteHostsFileEntry $testSiteName
+    # Get-CaccaIISSiteHostsFileEntry $testSiteName
 }
 finally {
-    Remove-CaccaIISWebsite $testSiteName
+    # Remove-CaccaIISWebsite $testSiteName
     # Remove-Item $testSitePath
     # Get-TecBoxHostnames
 }

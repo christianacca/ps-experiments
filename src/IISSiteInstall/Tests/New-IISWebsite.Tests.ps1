@@ -81,6 +81,7 @@ Describe 'New-IISWebsite' {
         [Microsoft.Web.Administration.Site] $siteArg = $null
         $siteConfig = {
             $siteArg = $_
+            New-IISSiteBinding $_.Name ':8082:' http
         }
 
         # when
@@ -89,6 +90,7 @@ Describe 'New-IISWebsite' {
         # then
         $siteArg | Should -Not -Be $null
         $siteArg.Name | Should -Be ($site.Name)
+        $site.Bindings.Count | Should -Be 2
     }
 
     It "-HostName" {
@@ -240,6 +242,109 @@ Describe 'New-IISWebsite' {
         It 'Should throw' {
             # when, then
             { New-CaccaIISWebsite $testSiteName "$TestDrive\$testSiteName" -EA Stop } | Should Throw
+        }
+    }
+}
+
+InModuleScope $moduleName {
+
+    Describe 'New-IISWebsite' -Tag Unit {
+
+        Context '-HostsFileIPAddress' {
+
+            BeforeAll {
+                # given
+                $testSiteName = 'DeleteMeSite'
+                $tempSitePath = "$TestDrive\$testSiteName"
+                Mock Add-TecBoxHostnames
+                Mock Remove-TecBoxHostnames
+            }
+
+            AfterEach {
+                Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+            }
+        
+            It 'Should add -Hostname to hosts file' {
+                # when
+                New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -HostsFileIPAddress 127.0.0.1
+        
+                # then
+                Assert-MockCalled Add-TecBoxHostnames -Exactly 1 -Scope It `
+                    -ExclusiveFilter {$Hostnames -eq 'deleteme' -and $IPAddress -eq '127.0.0.1'}
+            }
+
+            It 'Should add host names from extra binding to hosts file' {
+                # when
+                $site = New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -HostsFileIPAddress 127.0.0.1 -SiteConfig {
+                    New-IISSiteBinding $_.Name ':8082:deleteme2' http
+                }
+        
+                # then
+                Assert-MockCalled Add-TecBoxHostnames -Exactly 1 -Scope It `
+                    -ParameterFilter {$Hostnames -eq 'deleteme' -and $IPAddress -eq '127.0.0.1'}
+                Assert-MockCalled Add-TecBoxHostnames -Exactly 1 -Scope It `
+                    -ParameterFilter {$Hostnames -eq 'deleteme2' -and $IPAddress -eq '127.0.0.1'}
+            }
+        }
+
+        Context '-HostsFileIPAddress, when hosts file binds a different IP to hostname' {
+            
+            BeforeAll {
+                # given
+                $testSiteName = 'DeleteMeSite'
+                $tempSitePath = "$TestDrive\$testSiteName"
+                Mock Add-TecBoxHostnames
+                Mock Remove-TecBoxHostnames
+                Mock Get-TecBoxHostnames { 
+                    [PsCustomObject]@{ Hostname = 'testhost'; IpAddress = '127.0.0.1' } 
+                    [PsCustomObject]@{ Hostname = 'deleteme'; IpAddress = '192.168.0.1' } 
+                }
+
+                New-CaccaIISWebsite AnotherSite2 $tempSitePath -Hostname testhost -HostsFileIPAddress 127.0.0.1 -Port 8081 `
+                    -AppPoolName NowYouSeeMePool
+                New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -HostsFileIPAddress 192.168.0.1 -Port 8090
+
+                $errored = $false
+            
+                # when
+                try {
+                    New-CaccaIISWebsite AnotherSite2 $tempSitePath -Hostname deleteme -HostsFileIPAddress 127.0.0.1 `
+                        -Force -EA Stop
+                }
+                catch {
+                    $errored = $true
+                }
+            }
+
+            AfterAll {
+                Remove-CaccaIISWebsite $testSiteName -Confirm:$false
+                Remove-CaccaIISWebsite AnotherSite2 -Confirm:$false
+            }
+
+            It 'Should throw' -Skip {
+
+                # TODO
+
+                # then
+                $errored | Should -Be $true
+            }
+            
+            It 'Should not change hostfile' -Skip {
+
+                # TODO
+
+                Assert-MockCalled Remove-TecBoxHostnames -Exactly 0
+                Assert-MockCalled Add-TecBoxHostnames -Exactly 0 -ParameterFilter { $IpAddress -eq '127.0.0.1' }
+            }
+            
+            It 'Should not have modified IIS' -Skip {
+
+                # TODO
+
+                # then
+                (Get-IISSiteBinding AnotherSite2).BindingInformation | Should -Be ':8090:deleteme'
+                Get-IISAppPool NowYouSeeMePool | Should -Not -BeNullOrEmpty
+            }
         }
     }
 }

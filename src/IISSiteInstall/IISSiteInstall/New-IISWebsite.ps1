@@ -99,8 +99,13 @@ function New-IISWebsite {
                     [Microsoft.Web.Administration.Site] $site = New-IISSite $Name $Path $bindingInfo $Protocol -Passthru
                     $site.Applications["/"].ApplicationPoolName = $AppPoolName
 
-                    # note: assumed that 'SiteConfig' will NOT change the identity assigned to App Pool
                     $site | ForEach-Object $SiteConfig
+
+                    $allHostNames = $site.Bindings | Select-Object -Exp Host -Unique
+                    # todo: add -WhatIf support to Add-TecBoxHostnames
+                    if (![string]::IsNullOrWhiteSpace($HostsFileIPAddress) -and ($PSCmdlet.ShouldProcess($allHostNames, 'Add hostname'))) {
+                        $allHostNames | Add-TecBoxHostnames -IPAddress $HostsFileIPAddress
+                    }
                 }
     
                 Stop-IISCommitDelay
@@ -111,14 +116,6 @@ function New-IISWebsite {
             }
             finally {
                 Reset-IISServerManager -Confirm:$false
-            }
-
-            $site = Get-IISSite $Name
-
-            $hostName = $site.Bindings | Select-Object -Exp Host -Unique
-            # todo: add -WhatIf support to Add-TecBoxHostnames
-            if (![string]::IsNullOrWhiteSpace($HostsFileIPAddress) -and ($PSCmdlet.ShouldProcess($hostName, 'Add hostname'))) {
-                $hostName | Add-TecBoxHostnames -IPAddress $HostsFileIPAddress
             }
 
             if ($WhatIfPreference -eq $true -and !$isPathExists) {
@@ -139,7 +136,7 @@ function New-IISWebsite {
                 Set-CaccaIISSiteAcl @siteAclParams
             }
 
-            $site
+            Get-IISSite $Name
         }
         catch {
             Write-Error -ErrorRecord $_ -EA $callerEA
