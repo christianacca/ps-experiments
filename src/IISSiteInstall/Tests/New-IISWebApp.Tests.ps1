@@ -146,6 +146,40 @@ Describe 'New-IISWebApp' {
         }
     }
 
+    Context '-Config' {
+        BeforeEach {
+            # given
+            $appName = '/MyApp8'
+        }
+    
+        AfterEach {
+            Remove-CaccaIISWebApp $testSiteName $appName
+        }
+
+        It 'Should receive Application being created' {
+            # when
+            $appArg = $null
+            New-CaccaIISWebApp $testSiteName $appName -Config {
+                $appArg = $_
+            }
+    
+            # then
+            $appArg | Should -Not -Be $null
+            $appArg.Path | Should -Be $appName
+        }
+    
+        It 'Failure should cause app to NOT be created' {
+
+            # when
+            New-CaccaIISWebApp $testSiteName $appName -EA SilentlyContinue -Config {
+                throw "BANG"
+            }
+
+            # then
+            (Get-IISSite $testSiteName).Applications[$appName] | Should -BeNullOrEmpty
+        }
+    }
+
     Context '-AppPoolName, when pool exists' {
         BeforeAll {
             # given
@@ -277,7 +311,7 @@ Describe 'New-IISWebApp' {
     
                 # when
                 New-CaccaIISWebApp $testSiteName $appName -AppPoolName  $appPoolName -AppPoolConfig {
-                    $_ | Set-CaccaIISAppPoolUser $creds
+                    $_ | Set-CaccaIISAppPoolUser $creds -Commit:$false
                 }
     
                 $app = (Get-IISSite $testSiteName).Applications[$appName]
@@ -381,7 +415,7 @@ Describe 'New-IISWebApp' {
             # when
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -AppPoolConfig {
                 # this will fail this config block were to be called
-                Set-CaccaIISAppPoolUser
+                Set-CaccaIISAppPoolUser -Commit:$false
             } -WhatIf
         }
 

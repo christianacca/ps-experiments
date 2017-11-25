@@ -20,6 +20,10 @@ function Set-IISAppPoolUser {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+
+        if (!$PSBoundParameters.ContainsKey('Commit')) {
+            $Commit = $true
+        }
     }
     
     process {

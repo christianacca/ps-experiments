@@ -51,7 +51,7 @@ Describe 'New-IISAppPool' {
     
             # when
             New-CaccaIISAppPool $tempAppPool -Config {
-                $_ | Set-CaccaIISAppPoolUser $creds
+                $_ | Set-CaccaIISAppPoolUser $creds -Commit:$false
             }
             
             # then
@@ -61,7 +61,7 @@ Describe 'New-IISAppPool' {
         It "Can create with explicitly with ApplicationPoolIdentity" {    
             # when
             New-CaccaIISAppPool $tempAppPool -Config {
-                $_ | Set-CaccaIISAppPoolUser -IdentityType ApplicationPoolIdentity
+                $_ | Set-CaccaIISAppPoolUser -IdentityType ApplicationPoolIdentity -Commit:$false
             }
             
             # then
@@ -71,7 +71,7 @@ Describe 'New-IISAppPool' {
         It "Can create with explicitly with NetworkService" {    
             # when
             New-CaccaIISAppPool $tempAppPool -Config {
-                $_ | Set-CaccaIISAppPoolUser -IdentityType NetworkService
+                $_ | Set-CaccaIISAppPoolUser -IdentityType NetworkService -Commit:$false
             }
             
             # then
@@ -81,7 +81,7 @@ Describe 'New-IISAppPool' {
         It "Can create with explicitly with LocalSystem" {    
             # when
             New-CaccaIISAppPool $tempAppPool -Config {
-                $_ | Set-CaccaIISAppPoolUser -IdentityType LocalSystem
+                $_ | Set-CaccaIISAppPoolUser -IdentityType LocalSystem -Commit:$false
             }
             
             # then
@@ -91,7 +91,7 @@ Describe 'New-IISAppPool' {
         It "Can create with explicitly with LocalService" {    
             # when
             New-CaccaIISAppPool $tempAppPool -Config {
-                $_ | Set-CaccaIISAppPoolUser -IdentityType LocalService
+                $_ | Set-CaccaIISAppPoolUser -IdentityType LocalService -Commit:$false
             }
             
             # then

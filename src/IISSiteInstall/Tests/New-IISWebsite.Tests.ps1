@@ -123,7 +123,7 @@ Describe 'New-IISWebsite' {
 
         # when
         New-CaccaIISWebsite $testSiteName $tempSitePath -EA Stop -AppPoolConfig {
-            $_ | Set-CaccaIISAppPoolUser $creds
+            $_ | Set-CaccaIISAppPoolUser $creds -Commit:$false
         }
         
         # then
@@ -206,7 +206,7 @@ Describe 'New-IISWebsite' {
         # when
         New-CaccaIISWebsite $testSiteName $tempSitePath -AppPoolName 'MyAppPool'  -AppPoolConfig {
             # this will fail this config block were to be called
-            Set-CaccaIISAppPoolUser
+            Set-CaccaIISAppPoolUser -Commit:$false
         } -WhatIf
 
         # then

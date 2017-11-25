@@ -128,7 +128,7 @@ Describe 'Remove-IISWebApp' {
             $appPoolUsername = "IIS AppPool\$appPoolName"
             $appName = 'MyApp'
             New-CaccaIISWebApp $testSiteName $appName -AppPoolName $appPoolName -AppPoolConfig {
-                $_ | Set-CaccaIISAppPoolUser $creds
+                $_ | Set-CaccaIISAppPoolUser $creds -Commit:$false
             }
 
             # when

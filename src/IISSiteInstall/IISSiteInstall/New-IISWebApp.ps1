@@ -16,6 +16,9 @@ function New-IISWebApp {
         [string] $Path,
 
         [Parameter(ValueFromPipelineByPropertyName)]
+        [scriptblock] $Config,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
         [string] $AppPoolName,
 
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -56,6 +59,9 @@ function New-IISWebApp {
             $Name = $Name.Trim()
             if (!$Name.StartsWith('/')) {
                 $Name = '/' + $Name
+            }
+            if ($Config -eq $null) {
+                $Config = {}
             }
             if ($ModifyPaths -eq $null) {
                 $ModifyPaths = @()
@@ -123,6 +129,8 @@ function New-IISWebApp {
                 if ($PSCmdlet.ShouldProcess($qualifiedAppName, 'Create Web Application')) {
                     $app = $site.Applications.Add($Name, $childPath)
                     $app.ApplicationPoolName = $AppPoolName
+
+                    $app | ForEach-Object $Config
                 }
 
                 Stop-IISCommitDelay

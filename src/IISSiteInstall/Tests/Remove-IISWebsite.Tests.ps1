@@ -90,7 +90,7 @@ Describe 'Remove-IISWebsite' {
             New-LocalUser $testLocalUser -Password $pswd
 
             New-CaccaIISWebsite $testSiteName $TestDrive -AppPoolName $testAppPool -AppPoolConfig {
-                $_ | Set-CaccaIISAppPoolUser $creds
+                $_ | Set-CaccaIISAppPoolUser $creds -Commit:$false
             }
         
 

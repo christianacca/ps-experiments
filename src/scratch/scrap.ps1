@@ -1,18 +1,9 @@
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
-# $hostName = 'deleteme', 'deleteme2'
-# $hostName | Add-TecBoxHostnames -IPAddress 127.0.0.1
-
-
 # Remove-CaccaIISWebsite DeleteMeSite
 # return
 
-Get-IISSiteBinding $testSiteName
-New-IISSiteBinding $testSiteName ':8090:ano' http
-
-$names = (Get-IISSite $testSiteName).Bindings | Select-Object -Exp Host -Unique
-$names.GetType()
 
 $testSiteName = "Scrap-$(New-Guid)"
 $testSitePath = "C:\inetpub\sites\$testSiteName"
@@ -23,17 +14,17 @@ Reset-IISServerManager -Confirm:$false
 
 try {
 
-    # Get-IISSite 'Scrap-defa3fe4-cc70-4c0f-8d12-73151190d50e' | Select-Object -Exp Bindings
-
-    New-CaccaIISWebsite $testSiteName -HostName $testSiteName -HostsFileIPAddress '127.0.0.1' | Out-Null
-    # Get-TecBoxHostnames
-    # Get-CaccaIISSiteHostsFileEntry $testSiteName
+    New-CaccaIISWebsite $testSiteName -HostName $testSiteName -HostsFileIPAddress '127.0.0.1' -AddHostToBackConnections
+    Get-CaccaIISSiteHostsFileEntry $testSiteName | ft -AutoSize -Wrap
+    Get-CaccaIISSiteBackConnection $testSiteName | ft -AutoSize -Wrap
 }
 finally {
-    # Remove-CaccaIISWebsite $testSiteName
-    # Remove-Item $testSitePath
-    # Get-TecBoxHostnames
+    Remove-CaccaIISWebsite $testSiteName
+    Remove-Item $testSitePath
 }
+
+Get-TecBoxHostnames
+Get-TecBoxBackConnectionHostNames
 
 # (Get-IISAppPool $testAppPoolName).ProcessModel
 
