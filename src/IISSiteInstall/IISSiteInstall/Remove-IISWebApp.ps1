@@ -1,6 +1,38 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISWebApp {
+    <#
+    .SYNOPSIS
+    Removes an IIS Web Application, it's associated App Pool and file permissions
+    
+    .DESCRIPTION
+    Removes an IIS Web Application, it's associated App Pool and file permissions.
+
+    By default just the file permissions assigned to the phyical file path of the web 
+    application and Temp ASP.Net files will be removed.
+
+    Use 'ModifyPaths' and/or 'ExecutePaths' to supply additional paths to remove file 
+    permissions from. Typically these paths are the ones supplied to the New-CaccaIISWebApp 
+    cmdlet.
+    
+    .PARAMETER SiteName
+    The name of the IIS Website to add the application to
+    
+    .PARAMETER Name
+    The logical path name of the application (eg MyApp, /MyApp/NestedApp)
+    
+    .PARAMETER ModifyPaths
+    Additional paths to remove modify file permissions from. Path(s) relative to 'Path' can be supplied
+
+    .PARAMETER ExecutePaths
+    Additional paths to remove read+excute permissions from. Path(s) relative to 'Path' can be supplied
+    
+    .EXAMPLE
+    Remove-CaccaIISWebApp MySite MyApp
+    
+    .NOTES
+    An App Pool that is also assigned to other Web Application's will NOT be removed
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]

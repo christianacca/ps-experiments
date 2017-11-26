@@ -1,4 +1,44 @@
 function Set-IISAppPoolUser {
+    <#
+    .SYNOPSIS
+    Set the Windows account identity of the App Pool
+    
+    .DESCRIPTION
+    Set the Windows account identity of the App Pool
+    
+    .PARAMETER Credential
+    The credential of a specific account to assign as the identity
+    
+    .PARAMETER IdentityType
+    The built-in windows account to assign as the identity
+    
+    .PARAMETER InputObject
+    The App Pool whose identity is to be assigned
+    
+    .PARAMETER Commit
+    Save changes to IIS immediately? Defaults to true
+    
+    .EXAMPLE
+    Get-IISAppPool MyAppPool | Set-CaccaIISAppPoolUser -IdentityType ApplicationPoolIdentity
+
+    Description
+    -----------
+    Set the identity of the app ppol to use ApplicationPoolIdentity. In this example, the virtual
+    user 'IIS AppPool\MyAppPool' will be assigned as the Windows identity
+
+    .EXAMPLE
+    $pswd = ConvertTo-SecureString '(mypassword)' -AsPlainText -Force
+    $creds = [PsCredential]::new("$($env:COMPUTERNAME)\MyLocalUser", $pswd)
+
+    New-CaccaIISAppPool $tempAppPool -Config {
+        $_ | Set-CaccaIISAppPoolUser $creds -Commit:$false
+    }
+
+    Description
+    -----------
+    Create an pool with an identity assigned to a specific user account
+    
+    #>
     [CmdletBinding(DefaultParameterSetName='None')]
     param (
         [Parameter(Mandatory, ParameterSetName = 'SpecificUser', Position = 0)]

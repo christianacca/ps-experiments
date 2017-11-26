@@ -1,6 +1,23 @@
 #Requires -RunAsAdministrator
 
 function Remove-UserFromAcl {
+    <#
+    .SYNOPSIS
+    Remove a Windows account from the ACL of a specified file path
+    
+    .DESCRIPTION
+    Remove a Windows account from the ACL of a specified file path
+    
+    .PARAMETER IdentityReference
+    The Windows account to remove
+    
+    .PARAMETER Path
+    The target file path
+    
+    .EXAMPLE
+    An example
+
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]

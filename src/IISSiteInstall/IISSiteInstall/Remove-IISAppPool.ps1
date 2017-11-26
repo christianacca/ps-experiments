@@ -1,6 +1,37 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISAppPool {
+    <#
+    .SYNOPSIS
+    Removes an IIS AppPool and associated file permissions
+    
+    .DESCRIPTION
+    Removes an IIS AppPool and associated file permissions.
+
+    File permissions on the Temp ASP.Net files will be removed.
+
+    Where the pool uses ApplicationPoolIdentity, file permissions for this identity will be
+    removed from all physical paths of all Website/Application that is assigned to this pool
+    
+    .PARAMETER Name
+    The name of the pool to remove
+    
+    .PARAMETER InputObject
+    The instance of the pool to remove
+    
+    .PARAMETER Force
+    Delete the pool even if it's assigned to a Site and/or application
+    
+    .PARAMETER Commit
+    Save changes to IIS immediately? Defaults to true
+    
+    .EXAMPLE
+    Remove-CaccaIISAppPool MyAppPool
+    
+    .NOTES
+    Exception thrown when:
+    * Application Pool is assigned to one or more sites/applications and -Force is NOT supplied
+    #>
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Name')]
     param (
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Name', Position = 0)]

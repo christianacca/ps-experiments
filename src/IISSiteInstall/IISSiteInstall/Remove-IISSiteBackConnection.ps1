@@ -1,6 +1,26 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISSiteBackConnection {
+    <#
+    .SYNOPSIS
+    Removes the host name(s) from the back connections registry setting
+    
+    .DESCRIPTION
+    Removes the host name from the back connections registry setting
+    
+    .PARAMETER InputObject
+    The backconnection entry to remove
+    
+    .PARAMETER Force
+    Remove even if the host name is assigned to more than one site
+    
+    .EXAMPLE
+    Get-CaccaIISSiteBackConnection MySite | Remove-IISSiteBackConnection
+    
+    .NOTES
+    Exception thrown when:
+    * the host name is assigned to more than one site and -Force is NOT supplied
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(ValueFromPipeline)]

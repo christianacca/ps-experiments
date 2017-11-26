@@ -18,7 +18,7 @@ function New-IISAppPool {
     Overwrite any existing pool?
     
     .PARAMETER Commit
-    Save pool to IIS immediately? Defaults to $true is not supplied
+    Save changes to IIS immediately? Defaults to true
     
     .EXAMPLE
     New-CaccaIISAppPool MyNewPool

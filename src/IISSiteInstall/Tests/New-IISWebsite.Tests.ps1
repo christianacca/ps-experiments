@@ -76,16 +76,16 @@ Describe 'New-IISWebsite' {
         $identities | ? Value -eq $testAppPoolUsername | Should -Not -BeNullOrEmpty
     }
 
-    It "-SiteConfig" {
+    It "-Config" {
         # given
         [Microsoft.Web.Administration.Site] $siteArg = $null
-        $siteConfig = {
+        $Config = {
             $siteArg = $_
             New-IISSiteBinding $_.Name ':8082:' http
         }
 
         # when
-        $site = New-CaccaIISWebsite $testSiteName -SiteConfig $siteConfig
+        $site = New-CaccaIISWebsite $testSiteName -Config $Config
 
         # then
         $siteArg | Should -Not -Be $null
@@ -188,7 +188,7 @@ Describe 'New-IISWebsite' {
             Port          = 80
             Protocol      = 'http'
             HostName      = 'local-site'
-            SiteConfig    = {}
+            Config        = {}
             ModifyPaths   = @()
             ExecutePaths  = @()
             SiteShellOnly = $true
@@ -274,7 +274,7 @@ InModuleScope $moduleName {
 
             It 'Should add host names from extra binding to backconnections' {
                 # when
-                New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -AddHostToBackConnections -SiteConfig {
+                New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -AddHostToBackConnections -Config {
                     New-IISSiteBinding $_.Name ':8082:deleteme2' http
                 }
         
@@ -315,7 +315,7 @@ InModuleScope $moduleName {
 
             It 'Should add host names from extra binding to hosts file' {
                 # when
-                $site = New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -HostsFileIPAddress 127.0.0.1 -SiteConfig {
+                $site = New-CaccaIISWebsite $testSiteName $tempSitePath -Hostname deleteme -HostsFileIPAddress 127.0.0.1 -Config {
                     New-IISSiteBinding $_.Name ':8082:deleteme2' http
                 }
         

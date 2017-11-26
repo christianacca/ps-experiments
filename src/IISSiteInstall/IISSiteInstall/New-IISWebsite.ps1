@@ -35,7 +35,7 @@ function New-IISWebsite {
     .PARAMETER HostName
     The Hostname to use for the default site binding
     
-    .PARAMETER SiteConfig
+    .PARAMETER Config
     A script block that will receive the instance of the Website being created
     
     .PARAMETER ModifyPaths
@@ -48,7 +48,7 @@ function New-IISWebsite {
     Grant permissions used for 'Path' to only that folder and it's files but NOT subfolders
     
     .PARAMETER AppPoolName
-    The name of the AppPool to create. Defaults to "$Name-AppPool"
+    The name of the AppPool to assign and create if missing. Defaults to "$Name-AppPool"
     
     .PARAMETER AppPoolConfig
     A script block that will receive the instance of the pool to be used by the application
@@ -111,7 +111,7 @@ function New-IISWebsite {
     Configures additional file permissions to the useraccount configured as the identity of the IIS AppPool
 
     .EXAMPLE
-    New-CaccaIISWebsite MySite -HostsFileIPAddress 127.0.0.1 -Hostname dev-mysite -AddHostToBackConnections -SiteConfig {
+    New-CaccaIISWebsite MySite -HostsFileIPAddress 127.0.0.1 -Hostname dev-mysite -AddHostToBackConnections -Config {
         New-IISSiteBinding $_.Name ':8080:local-mysite' http
     }
 
@@ -122,7 +122,9 @@ function New-IISWebsite {
     security check
 
     .NOTES
-    General notes
+    Exception thrown when:
+    * Website 'Name' already exists and -Force is NOT supplied
+    * The Application Pool 'AppPoolName' is used by another Website
     #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
@@ -137,13 +139,14 @@ function New-IISWebsite {
         [int] $Port = 80,
 
         [Parameter(ValueFromPipelineByPropertyName)]
+        [ValidateSet('http', 'https')]
         [string] $Protocol = 'http',
 
         [Parameter(ValueFromPipelineByPropertyName)]
         [string] $HostName,
 
         [Parameter(ValueFromPipelineByPropertyName)]
-        [scriptblock] $SiteConfig,
+        [scriptblock] $Config,
 
         [Parameter(ValueFromPipelineByPropertyName)]
         [string[]] $ModifyPaths,
@@ -179,8 +182,8 @@ function New-IISWebsite {
             if ([string]::IsNullOrWhiteSpace($Path)) {
                 $Path = "C:\inetpub\sites\$Name"
             }
-            if ($SiteConfig -eq $null) {
-                $SiteConfig = {}
+            if ($Config -eq $null) {
+                $Config = {}
             }
             if ($ModifyPaths -eq $null) {
                 $ModifyPaths = @()
@@ -217,7 +220,14 @@ function New-IISWebsite {
             Start-IISCommitDelay
             try {
     
-                New-IISAppPool $AppPoolName $AppPoolConfig -Force -Commit:$false | Out-Null
+				$pool = Get-IISAppPool $AppPoolName -WA SilentlyContinue
+                if (!$pool) {
+                    $pool = New-IISAppPool $AppPoolName -Commit:$false
+                }
+                
+                if ($AppPoolConfig -and $WhatIfPreference -eq $false) {
+                    $pool | ForEach-Object $AppPoolConfig | Out-Null
+                }
     
                 $site = $null
                 if ($PSCmdlet.ShouldProcess($Name, 'Create Web Site')) {
@@ -225,19 +235,17 @@ function New-IISWebsite {
                     [Microsoft.Web.Administration.Site] $site = New-IISSite $Name $Path $bindingInfo $Protocol -Passthru
                     $site.Applications["/"].ApplicationPoolName = $AppPoolName
 
-                    $site | ForEach-Object $SiteConfig
-                }
+                    $site | ForEach-Object $Config
 
-                $allHostNames = $site.Bindings | Select-Object -Exp Host -Unique
-
-                # todo: add -WhatIf support to Add-TecBoxHostnames
-                if (![string]::IsNullOrWhiteSpace($HostsFileIPAddress) -and $PSCmdlet.ShouldProcess($allHostNames, 'Add hosts file entry')) {
-                    $allHostNames | Add-TecBoxHostnames -IPAddress $HostsFileIPAddress
-                }
-
-                # todo: add -WhatIf support to Add-BackConnectionHostNames
-                if ($AddHostToBackConnections -and $PSCmdlet.ShouldProcess($allHostNames, 'Add back connection')) {
-                    $allHostNames | Add-TecBoxBackConnectionHostNames
+                    $allHostNames = $site.Bindings | Select-Object -Exp Host -Unique
+                    
+                    if (![string]::IsNullOrWhiteSpace($HostsFileIPAddress) -and $PSCmdlet.ShouldProcess($allHostNames, 'Add hosts file entry')) {
+                        $allHostNames | Add-TecBoxHostnames -IPAddress $HostsFileIPAddress
+                    }
+                    
+                    if ($AddHostToBackConnections -and $PSCmdlet.ShouldProcess($allHostNames, 'Add back connection')) {
+                        $allHostNames | Add-TecBoxBackConnectionHostNames
+                    }
                 }
     
                 Stop-IISCommitDelay

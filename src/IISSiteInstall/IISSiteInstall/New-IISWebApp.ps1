@@ -29,7 +29,8 @@ function New-IISWebApp {
     A script block that will receive the instance of the application being created
     
     .PARAMETER AppPoolName
-    The name of the AppPool to create. If not supplied, will default to use the AppPool of the IIS Website
+    The name of the AppPool to assign and create if missing.
+    If not supplied, will default to use the AppPool of the IIS Website
     
     .PARAMETER AppPoolConfig
     A script block that will receive the instance of the pool to be used by the application

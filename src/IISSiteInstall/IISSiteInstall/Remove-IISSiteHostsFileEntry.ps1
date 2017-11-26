@@ -1,6 +1,26 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISSiteHostsFileEntry {
+    <#
+    .SYNOPSIS
+    Removes the host name(s) from the hosts file
+    
+    .DESCRIPTION
+    Removes the host name(s) from the hosts file
+    
+    .PARAMETER InputObject
+    The host name entry to remove
+    
+    .PARAMETER Force
+    Remove even if the host name is assigned to more than one site
+    
+    .EXAMPLE
+    Get-CaccaIISSiteHostsFileEntry MySite | Remove-CaccaIISSiteHostsFileEntry
+    
+    .NOTES
+    Exception thrown when:
+    * the host name is assigned to more than one site and -Force is NOT supplied
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(ValueFromPipeline)]

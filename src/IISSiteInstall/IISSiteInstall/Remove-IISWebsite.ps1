@@ -1,6 +1,34 @@
 #Requires -RunAsAdministrator
 
 function Remove-IISWebsite {
+    <#
+    .SYNOPSIS
+    Removes an IIS Website, it's associated App Pool, file permissions, hosts file and back connection entries
+    
+    .DESCRIPTION
+    Removes an IIS Website, it's associated App Pool, file permissions, hosts file and back connection entries
+
+    When removing file permissions assigned to the identity of the application pool(s) for the site, 
+    the following paths will be searched:
+    - the phyical file path of the site and all their subfolders and files
+    - the phyical file path of all child applications and all their subfolders and files
+    - all Temp ASP.Net files folders
+    
+    .PARAMETER Name
+    The name of the IIS Website to add the application to
+    
+    .PARAMETER KeepBackConnection
+    Don't remove the host name(s) for this site from the back connections list?
+    
+    .PARAMETER KeepHostsFileEntry
+    Don't remove the host name(s) for this site from the hosts file?
+    
+    .EXAMPLE
+    Remove-CaccaIISWebsite MySite
+    
+    .NOTES
+    An App Pool that is also assigned to other Websites will NOT be removed
+    #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]

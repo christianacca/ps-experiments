@@ -1,7 +1,7 @@
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
-# Remove-CaccaIISWebsite DeleteMeSite
+Remove-CaccaIISWebsite Series5
 # return
 
 
