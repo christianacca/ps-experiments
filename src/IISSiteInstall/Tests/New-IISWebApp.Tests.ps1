@@ -73,33 +73,6 @@ Describe 'New-IISWebApp' {
         }
     }
 
-    Context '-Name' {
-        BeforeAll {
-            $appName = '/MyApp/Child2'
-
-            # when
-            New-CaccaIISWebApp $testSiteName $appName
-
-            $app = (Get-IISSite $testSiteName).Applications[$appName]
-        }
-    
-        AfterAll {
-            Remove-CaccaIISWebApp $testSiteName $appName
-        }
-
-        It 'Should have created child app with name supplied' {
-            # then
-            $app | Should -Not -BeNullOrEmpty
-        }
-
-        It 'Should set physical path to be a subfolder of site' {
-            # then
-            $expectedPhysicalPath = "$sitePath$($appName.Replace('/', '\'))"
-            $expectedPhysicalPath | Should -Exist
-            $app.VirtualDirectories["/"].PhysicalPath | Should -Be $expectedPhysicalPath
-        }
-    }
-
     Context '-Path' {
         BeforeAll {
             # given

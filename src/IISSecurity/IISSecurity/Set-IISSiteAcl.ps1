@@ -8,7 +8,8 @@ function Set-IISSiteAcl {
     to the useraccount that is configured as the identity of an IIS AppPool.
 
     These bare minium permissions include:
-    - SitePath: Read 'This folder', and files (no inherit)
+    - SitePath: Read 'This folder', file and subfolder permissions (inherited)
+        - Note: use 'SiteShellOnly' to reduce these permissions to just the folder and files but NOT subfolders
     - AppPath: Read 'This folder', file and subfolder permissions (inherited)
     - Temporary ASP.NET Files: Read 'This folder', file and subfolder permissions (inherited)
     - ModifyPaths: modify 'This folder', file and subfolder permissions (inherited)
@@ -28,6 +29,9 @@ function Set-IISSiteAcl {
 
     .PARAMETER ExecutePaths
     Additional paths to grant read+excute permissions. Path(s) relative to AppPath can be supplied
+
+    .PARAMETER SiteShellOnly
+    Grant permissions used for 'SitePath' to only that folder and it's files but NOT subfolders
 
     .EXAMPLE
     Set-IISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolName 'MyWebApp1-AppPool'

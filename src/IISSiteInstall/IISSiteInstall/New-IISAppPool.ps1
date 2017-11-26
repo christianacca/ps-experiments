@@ -1,6 +1,64 @@
 #Requires -RunAsAdministrator
 
 function New-IISAppPool {
+    <#
+    .SYNOPSIS
+    Creates a new IIS application pool
+    
+    .DESCRIPTION
+    Creates a new IIS application pool
+    
+    .PARAMETER Name
+    The name of the pool
+    
+    .PARAMETER Config
+    A script block that will receive the instance of the pool being created
+    
+    .PARAMETER Force
+    Overwrite any existing pool?
+    
+    .PARAMETER Commit
+    Save pool to IIS immediately? Defaults to $true is not supplied
+    
+    .EXAMPLE
+    New-CaccaIISAppPool MyNewPool
+
+    Description
+    -----------
+    Create pool using the defaults configured for all application pools.
+    The exception to the defaults is 'Enable32BitAppOnWin64' is set to $true (best practice)
+
+    .EXAMPLE
+    New-CaccaIISAppPool MyNewPool -Config {
+        $_.Enable32BitAppOnWin64 = $false
+    }
+
+    Description
+    -----------
+    Configures the pool being created with custom settings
+
+    .EXAMPLE
+    New-CaccaIISAppPool $tempAppPool -Config {
+        $_ | Set-CaccaIISAppPoolUser -IdentityType NetworkService -Commit:$false
+    }
+
+    Description
+    -----------
+    Create the pool with an identity assigned to the Network Service built-in account
+
+    .EXAMPLE
+    $pswd = ConvertTo-SecureString '(mypassword)' -AsPlainText -Force
+    $creds = [PsCredential]::new("$($env:COMPUTERNAME)\MyLocalUser", $pswd)
+
+    New-CaccaIISAppPool $tempAppPool -Config {
+        $_ | Set-CaccaIISAppPoolUser $creds -Commit:$false
+    }
+
+    Description
+    -----------
+    Create the pool with an identity assigned to a specific user account
+
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]

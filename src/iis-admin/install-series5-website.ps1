@@ -59,3 +59,5 @@ New-CaccaIISWebApp @winLoginParams -Config {
 # Harden webserver
 Set-CaccaWebHardenedAcl -Path $RootPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
 Set-CaccaWebHardenedAcl -Path $SitePhysicalPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
+
+Get-CaccaIISSiteAclPath Series5

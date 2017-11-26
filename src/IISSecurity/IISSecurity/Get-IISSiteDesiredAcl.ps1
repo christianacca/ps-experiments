@@ -17,6 +17,12 @@ function Get-IISSiteDesiredAcl {
 
     .PARAMETER ExecutePaths
     Additional paths to remove permissions. Path(s) relative to AppPath can be supplied
+    
+    .PARAMETER SiteShellOnly
+    Permissions used for 'SitePath' should only be to that folder and it's files but NOT subfolders
+    
+    .PARAMETER SkipTempAspNetFiles
+    Permissions should not be granted to Temporary ASP.NET Files folder(s)
 
     .EXAMPLE
     Get-IISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot'

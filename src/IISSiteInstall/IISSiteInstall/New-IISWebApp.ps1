@@ -1,6 +1,91 @@
 #Requires -RunAsAdministrator
 
 function New-IISWebApp {
+    <#
+    .SYNOPSIS
+    Creates a new IIS Web application + App Pool, assigning it least-privilege file permissions
+    
+    .DESCRIPTION
+    Creates a new IIS Web application + App Pool, setting least privilege file permissions to 
+    the useraccount configured as the identity of the IIS AppPool.
+
+    These bare minium file permissions include:
+    - Path: Read 'This folder', file and subfolder permissions (inherited)
+    - Temporary ASP.NET Files: Read 'This folder', file and subfolder permissions (inherited)
+    - ModifyPaths: modify 'This folder', file and subfolder permissions (inherited)
+    - ExecutePaths: read+execute file (no inherit)
+
+    .PARAMETER SiteName
+    The name of the IIS Website to add the application to
+    
+    .PARAMETER Name
+    The logical path name of the application (eg MyApp, /MyApp/NestedApp)
+    
+    .PARAMETER Path
+    The physcial path of the application. Defaults to using 'Name' as a sub folder of the physical site path.
+    Path will be created if missing.
+    
+    .PARAMETER Config
+    A script block that will receive the instance of the application being created
+    
+    .PARAMETER AppPoolName
+    The name of the AppPool to create. If not supplied, will default to use the AppPool of the IIS Website
+    
+    .PARAMETER AppPoolConfig
+    A script block that will receive the instance of the pool to be used by the application
+    
+    .PARAMETER ModifyPaths
+    Additional paths to grant modify (inherited) permissions. Path(s) relative to 'Path' can be supplied
+
+    .PARAMETER ExecutePaths
+    Additional paths to grant read+excute permissions. Path(s) relative to 'Path' can be supplied
+    
+    .PARAMETER Force
+    Overwrite any existing application?
+    
+    .EXAMPLE
+    New-CaccaIISWebApp MySite MyNewApp
+
+    Description
+    -----------
+    Create child Web application of MySite, with the physical path set as a subfolder of the Website
+    (eg C:\inetpub\sites\MySite\MyNewApp), and an App Pool assigned to that of the Website
+
+    .EXAMPLE
+    New-CaccaIISWebApp MySite MyNewApp -AppPoolName MyNewPool -AppPoolConfig {
+        $_ | Set-CaccaIISAppPoolUser -IdentityType ApplicationPoolIdentity -Commit:$false
+    }
+
+    Description
+    -----------
+    As above except assigns, creating as necessary, an App Pool named 'MyNewPool' and
+    configuring that pool to use the ApplicationPoolIdentity as it's identity
+
+    .EXAMPLE
+    New-CaccaIISWebApp MySite MyNewApp C:\Some\Path\Else -Config {
+        Unlock-CaccaIISAnonymousAuth -Location "$SiteName$($_.Path)" -Commit:$false
+    }
+
+    Description
+    -----------
+    Create child Web application of MySite, with the physical path set to C:\Some\Path\Else.
+
+    Uses -Config to supply a script block to perform custom configuration of the application. In this
+    example, using the Unlock-CaccaIISAnonymousAuth cmdlet from the IISConfigUnlock module
+
+    .EXAMPLE
+    New-CaccaIISWebApp MySite MyNewApp -ModifyPaths 'App_Data', 'logs' -ExecutePaths bin\Some.exe
+
+    Description
+    -----------
+    Configures additional file permissions to the useraccount configured as the identity of the IIS AppPool
+    
+    .NOTES
+    Exception thrown when:
+    * Application 'Name' already exists and -Force is NOT supplied
+    * The Application Pool 'AppPoolName' is used by another Website
+    * Using 'AppPoolConfig' to configure an Application pool that is already assigned to another Application and/or Website
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
