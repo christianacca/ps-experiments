@@ -9,9 +9,10 @@ $SpaRelativeAppPath = 'src\Ram.Series5.Spa'
 $WinLoginRelativeAppPath = 'src\Ram.Series5.WinLogin'
 $SitePhysicalPath = "C:\inetpub\sites\$SiteName"
 
-Import-Module '.\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1'
+Install-Module IISSiteInstall -RequiredVersion '0.1.0'
 Install-Module IISConfigUnlock -RequiredVersion '0.1.0'
 Import-Module IISConfigUnlock -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'
+Import-Module IISSiteInstall -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'
 
 # Declare script-wide constants/variables
 $spaAppPath = Join-Path $RootPath $SpaRelativeAppPath
@@ -59,5 +60,3 @@ New-CaccaIISWebApp @winLoginParams -Config {
 # Harden webserver
 Set-CaccaWebHardenedAcl -Path $RootPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
 Set-CaccaWebHardenedAcl -Path $SitePhysicalPath -SiteAdminsGroup 'BSW\Series5000Dev Group'
-
-Get-CaccaIISSiteAclPath Series5
