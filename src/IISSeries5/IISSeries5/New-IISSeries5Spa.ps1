@@ -66,10 +66,10 @@ function New-IISSeries5Spa {
             New-CaccaIISWebApp @spaParams -Config {
                 Unlock-CaccaIISAnonymousAuth -Location "$siteName$($_.Path)" -Commit:$false
                 Unlock-CaccaIISConfigSection -SectionPath 'system.webServer/rewrite/allowedServerVariables' -Location "$siteName$($_.Path)" -Commit:$false    
-            }
+            } | Out-Null
 
             if (![string]::IsNullOrWhiteSpace($WinLoginAppPath)) {
-                New-IISSeries5WinLoginApp $CompanyName $WinLoginAppPath
+                New-IISSeries5WinLoginApp $CompanyName $WinLoginAppPath | Out-Null
             }
         }
         catch {
