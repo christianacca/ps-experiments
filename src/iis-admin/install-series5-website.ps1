@@ -2,14 +2,7 @@
 
 $ErrorActionPreference = 'Stop'
 
-# todo: move this module install into an environment setup script
-# todo: environment setup script should install tranitive dependencies (consider using PSDepend to approximate npm shrinkwrap)
-Install-Module IISSeries5 -RequiredVersion '0.1.0'
-
-
-
-Import-Module IISSeries5 -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'
-Import-Module IISSecurity -MinimumVersion '0.1.0' -MaximumVersion '0.1.999'
+Invoke-PSDepend -Install -Import -Force -WA SilentlyContinue
 
 $devRoot = 'C:\Git\Series5'
 

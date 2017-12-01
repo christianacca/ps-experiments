@@ -1,1 +1,0 @@
-Install-Module IISSeries5 -RequiredVersion '0.1.0'
