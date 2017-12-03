@@ -288,4 +288,4 @@ __pycache__/
 *.xsd.cs
 
 # Custom excludes
-src/install-series5-iis/dependencies/
+src/PSSeries5Manager/dependencies/
