@@ -1,6 +1,9 @@
 Get-Module IISSiteInstall -All | Remove-Module
 Import-Module .\src\IISSiteInstall\IISSiteInstall\IISSiteInstall.psd1
 
+Reset-IISServerManager -Confirm:$false
+New-CaccaIISWebsite 'Default Web Site'
+
 Remove-CaccaIISWebsite Series5
 # return
 
