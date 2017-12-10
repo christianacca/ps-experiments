@@ -1,6 +1,6 @@
 function EnsurePSDepend {
     param(
-        [string] $PsDependVs = '0.1.56.1'
+        [string] $PsDependVs = '0.1.56.4'
     )
     try {
         Get-InstalledModule PSDepend -RequiredVersion $PsDependVs -EA Stop

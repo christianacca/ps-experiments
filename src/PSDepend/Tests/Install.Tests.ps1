@@ -97,7 +97,7 @@ Describe 'Install' {
             }
             
             It 'Should have installed dependent module' {
-                @(Get-InstalledModule DemoRequiringModule).Count | Should -Be 1
+                @(Get-InstalledModule DemoRequiredModule).Count | Should -Be 1
             }
         }
 
@@ -141,7 +141,10 @@ Describe 'Install' {
                 $requirements = "@{ 
                     PSDependOptions = @{ Target = '$projectPath\' } 
                     DemoRequiredModule  = '1.0.0'
-                    DemoRequiringModule = '1.0.0'
+                    DemoRequiringModule = @{
+                        Version = '1.0.0'
+                        DependsOn = 'DemoRequiredModule'
+                    }
                 }"
                 New-Item "$projectPath\requirements.psd1" -Value $requirements -Force
             
@@ -155,11 +158,18 @@ Describe 'Install' {
                 "$projectPath\DemoRequiredModule\1.0.0" | Should -Exist
             }
                         
-            It 'Should NOT have installed latest version of dependent module into target path' -Skip {
+            It 'Powershell will also installed latest version of dependent module into target path' {
                 # then
-                # this fails - PS has *also* installed the lastest vs of DemoRequiredModule module
                 $latestVs = (Find-Module DemoRequiredModule).Version
-                "$projectPath\DemoRequiredModule\$latestVs" | Should -Not -Exist
+                "$projectPath\DemoRequiredModule\$latestVs" | Should -Exist
+
+                # Tip: you might want to remove these excess versions by including this in requirements.psd1
+                <#
+                PostInstallFix = @{
+                    DependencyType = 'Command'
+                    Source = 'Remove-ExcessInstalledModules `$DependencyPath'
+                }
+                #>
             }
         }
     }

@@ -1,9 +1,3 @@
-$modulePath = Resolve-Path "$PSScriptRoot\..\*\*.psd1"
-$moduleName = Split-Path (Split-Path $modulePath) -Leaf
-
-Get-Module $moduleName -All | Remove-Module
-Import-Module $modulePath
-
 $testModuleName = '_LibraryTest1'
 $currentVs = ''
 
