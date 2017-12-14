@@ -2,7 +2,7 @@ function New-IISSeries5WinLoginApp {
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string] $CompanyName,
+        [string] $SiteSuffix,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [string] $AppPath
@@ -19,8 +19,8 @@ function New-IISSeries5WinLoginApp {
         try {
 
             $siteName = 'Series5'
-            if (![string]::IsNullOrWhiteSpace($CompanyName)) {
-                $siteName += "-$CompanyName"
+            if (![string]::IsNullOrWhiteSpace($SiteSuffix)) {
+                $siteName += "-$SiteSuffix"
             }
 
             $winLoginParams = @{

@@ -1,0 +1,1 @@
+start powershell -NoExit -File %~dp0\PSSeries5Dev.ps1 0.1.0

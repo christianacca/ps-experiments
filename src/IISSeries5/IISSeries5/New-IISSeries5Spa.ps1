@@ -2,7 +2,7 @@ function New-IISSeries5Spa {
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string] $CompanyName,
+        [string] $SiteSuffix,
 
         [Parameter(ValueFromPipelineByPropertyName)]
         [string] $SitePath,
@@ -39,8 +39,8 @@ function New-IISSeries5Spa {
 
 
             $siteName = 'Series5'
-            if (![string]::IsNullOrWhiteSpace($CompanyName)) {
-                $siteName += "-$CompanyName"
+            if (![string]::IsNullOrWhiteSpace($SiteSuffix)) {
+                $siteName += "-$SiteSuffix"
             }
             $siteShellOnly = ![string]::IsNullOrWhiteSpace($AppPath)
 
@@ -69,7 +69,7 @@ function New-IISSeries5Spa {
             } | Out-Null
 
             if (![string]::IsNullOrWhiteSpace($WinLoginAppPath)) {
-                New-IISSeries5WinLoginApp $CompanyName $WinLoginAppPath | Out-Null
+                New-IISSeries5WinLoginApp $SiteSuffix $WinLoginAppPath | Out-Null
             }
         }
         catch {
