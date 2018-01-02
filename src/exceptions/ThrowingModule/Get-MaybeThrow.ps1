@@ -8,10 +8,14 @@ function Get-MaybeThrow {
     begin {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
+        $callerVerbosePref = $VerbosePreference
         $ErrorActionPreference = 'Stop'
+        $VerbosePreference = 'SilentlyContinue'
 
         Write-Host "Get-MaybeThrow.callerEA: $callerEA"
         Write-Host "Get-MaybeThrow.ErrorActionPreference: $ErrorActionPreference"
+        Write-Host "Get-MaybeThrow.callerVerbosePref: $callerVerbosePref"
+        Write-Host "Get-MaybeThrow.VerbosePreference: $VerbosePreference"
     }
     
     process {

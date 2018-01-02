@@ -8,9 +8,13 @@ function Get-MaybeThrowResult {
     begin {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
+        $callerVerbosePref = $VerbosePreference
         $ErrorActionPreference = 'Stop'
+        $VerbosePreference = 'Inquire'
         Write-Host "Get-MaybeThrowResult.callerEA: $callerEA"
         Write-Host "Get-MaybeThrowResult.ErrorActionPreference: $ErrorActionPreference"
+        Write-Host "Get-MaybeThrowResult.callerVerbosePref: $callerVerbosePref"
+        Write-Host "Get-MaybeThrowResult.VerbosePreference: $VerbosePreference"
     }
     
     process {
