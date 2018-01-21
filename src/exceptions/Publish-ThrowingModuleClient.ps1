@@ -1,9 +1,25 @@
-$ErrorActionPreference = 'Stop'
+param()
+begin {
 
-Install-Module ThrowingModule -Repository LocalRepo
+    $ErrorActionPreference = 'Stop'
 
-$params = @{
-    Repository = 'LocalRepo'
-    Path = "$PSScriptRoot\ThrowingModuleClient"
+    $installedModules = @()
+    
+    function InstallDependentModules {
+        @('PreferenceVariables', 'ThrowingModule') | % {
+            if (-not( Get-InstalledModule $_ -EA SilentlyContinue)) {
+                Install-Module $_
+                $installedModules += $_
+            }
+        }
+    }
+
+    function UndoInstall {
+        $installedModules | % { Uninstall-Module $_ -Force }
+    }
 }
-Publish-Module @params
+process {
+    InstallDependentModules
+    Publish-Module -Path "$PSScriptRoot\ThrowingModuleClient" -Repository LocalRepo
+    UndoInstall
+}

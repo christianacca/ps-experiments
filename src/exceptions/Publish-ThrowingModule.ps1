@@ -1,7 +1,13 @@
 $ErrorActionPreference = 'Stop'
 
-$params = @{
-    Repository = 'LocalRepo'
-    Path = "$PSScriptRoot\ThrowingModule"
+$publish = { Publish-Module -Path "$PSScriptRoot\ThrowingModule" -Repository LocalRepo }
+
+try {
+    Get-InstalledModule PreferenceVariables | Out-Null
+    & $publish
 }
-Publish-Module @params
+catch {
+    Install-Module PreferenceVariables
+    & $publish
+    Uninstall-Module PreferenceVariables
+}

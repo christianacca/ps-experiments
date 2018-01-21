@@ -8,6 +8,8 @@ Install-Module PreferenceVariables
 Install-Module ThrowingModuleClient -Repository LocalRepo
 Import-Module ThrowingModuleClient
 
+Clear-Host
+
 
 Set-CaccaMaybeThrowResult '?' -PassThru
 Write-Host 'ThrowingModuleClient.demo.ps1... still running (1)'
