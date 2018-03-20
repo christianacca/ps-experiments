@@ -69,6 +69,18 @@ Describe 'Install-Module' {
         $installedModule = Get-InstalledModule $testModuleName -AllVersions
         ($installedModule | Measure-Object).Count | Should -Be 2
     }
+    
+    It '-Force is required to install an older version of module satisfying a vs range side-by-side with newer install' {
+        # given
+        Install-Module $testModuleName -RequiredVersion '1.0.0.3'
+
+        # when
+        Install-Module $testModuleName -MinimumVersion '1.0.0.0' -MaximumVersion '1.0.0.1'
+
+        # then
+        $installedModule = Get-InstalledModule $testModuleName -AllVersions
+        ($installedModule | Measure-Object).Count | Should -Be 1
+    }
 
     It '-Force is NOT required to install specific older version of module side-by-side with newer install' {
         # given (latest vs installed)
