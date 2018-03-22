@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $publish = { Publish-Module -Path "$PSScriptRoot\ThrowingModule" -Repository LocalRepo }
 
 try {
-    Get-InstalledModule PreferenceVariables | Out-Null
+    Get-InstalledModule PreferenceVariables -EA Stop | Out-Null
     & $publish
 }
 catch {

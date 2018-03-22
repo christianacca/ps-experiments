@@ -21,7 +21,8 @@ function Get-MaybeThrow {
     process {
         try {
             if ($Name -eq '?') {
-                throw 'Object not found, try another name.'
+                # throw 'Object not found, try another name.'
+                throw [ThrowingModuleException]::New('Object not found, try another name.')
             }
             [PsCustomObject] @{
                 Name = $Name
