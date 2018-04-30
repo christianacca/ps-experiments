@@ -11,13 +11,17 @@ function Set-MaybeThrowResult {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $callerVerbosePref = $VerbosePreference
+        $callerInformationPref = $InformationPreference
         $ErrorActionPreference = 'Stop'
         $VerbosePreference = 'Stop'
+        $InformationPreference = 'Continue'
 
         Write-Host "Set-MaybeThrowResult.callerEA: $callerEA"
         Write-Host "Set-MaybeThrowResult.ErrorActionPreference: $ErrorActionPreference"
         Write-Host "Set-MaybeThrowResult.callerVerbosePref: $callerVerbosePref"
         Write-Host "Set-MaybeThrowResult.VerbosePreference: $VerbosePreference"
+        Write-Host "Set-MaybeThrowResult.callerInformationPref: $callerInformationPref"
+        Write-Host "Set-MaybeThrowResult.InformationPreference: $InformationPreference"
     }
     
     process {
@@ -27,11 +31,11 @@ function Set-MaybeThrowResult {
                 $value
             }
 
-            Write-Host 'Set-MaybeThrowResult... still running'
+            Write-Host 'Set-MaybeThrowResult... still running' -InformationAction 'Continue'
 
         }
         catch {
-            Write-Host "Set-MaybeThrowResult... catch '$_'"
+            Write-Host "Set-MaybeThrowResult... catch '$_'" -InformationAction 'Continue'
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
     }

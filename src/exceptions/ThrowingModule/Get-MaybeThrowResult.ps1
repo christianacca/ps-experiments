@@ -17,24 +17,33 @@ function Get-MaybeThrowResult {
         # in calls to functions/cmdlets that reside in other modules.
         # In affect the calling module is in charge of the behaviour of it's internal
         # calls to other modules
+
+        # IMPORTANT: $InformationPreference is NOT being set from the calling module
+        # this is because Get-CallerPreference was written before this preference variable
+        # was introduced
+
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $callerVerbosePref = $VerbosePreference
+        $callerInformationPref = $InformationPreference
         $ErrorActionPreference = 'Stop'
         $VerbosePreference = 'Inquire'
-        Write-Host "Get-MaybeThrowResult.callerEA: $callerEA"
-        Write-Host "Get-MaybeThrowResult.ErrorActionPreference: $ErrorActionPreference"
-        Write-Host "Get-MaybeThrowResult.callerVerbosePref: $callerVerbosePref"
-        Write-Host "Get-MaybeThrowResult.VerbosePreference: $VerbosePreference"
+        $InformationPreference = 'Ignore'
+        Write-Host "Get-MaybeThrowResult.callerEA: $callerEA" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrowResult.ErrorActionPreference: $ErrorActionPreference" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrowResult.callerVerbosePref: $callerVerbosePref" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrowResult.VerbosePreference: $VerbosePreference" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrowResult.callerInformationPref: $callerInformationPref" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrowResult.InformationPreference: $InformationPreference" -InformationAction 'Continue'
     }
     
     process {
         try {
             Get-MaybeThrow $Name
-            Write-Host 'Get-MaybeThrowResult... still running'
+            Write-Host 'Get-MaybeThrowResult... still running' -InformationAction 'Continue'
         }
         catch {
-            Write-Host "Get-MaybeThrowResult... catch '$_'"
+            Write-Host "Get-MaybeThrowResult... catch '$_'" -InformationAction 'Continue'
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
     }

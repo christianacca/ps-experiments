@@ -9,13 +9,17 @@ function Get-MaybeThrow {
         Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
         $callerEA = $ErrorActionPreference
         $callerVerbosePref = $VerbosePreference
+        $callerInformationPref = $InformationPreference
         $ErrorActionPreference = 'Stop'
         $VerbosePreference = 'SilentlyContinue'
+        $InformationPreference = 'SilentlyContinue'
 
-        Write-Host "Get-MaybeThrow.callerEA: $callerEA"
-        Write-Host "Get-MaybeThrow.ErrorActionPreference: $ErrorActionPreference"
-        Write-Host "Get-MaybeThrow.callerVerbosePref: $callerVerbosePref"
-        Write-Host "Get-MaybeThrow.VerbosePreference: $VerbosePreference"
+        Write-Host "Get-MaybeThrow.callerEA: $callerEA" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrow.ErrorActionPreference: $ErrorActionPreference" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrow.callerVerbosePref: $callerVerbosePref" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrow.VerbosePreference: $VerbosePreference" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrow.callerInformationPref: $callerInformationPref" -InformationAction 'Continue'
+        Write-Host "Get-MaybeThrow.InformationPreference: $InformationPreference" -InformationAction 'Continue'
     }
     
     process {
@@ -28,11 +32,11 @@ function Get-MaybeThrow {
                 Name = $Name
             }
 
-            Write-Host 'Get-MaybeThrow... still running'
+            Write-Host 'Get-MaybeThrow... still running' -InformationAction 'Continue'
 
         }
         catch {
-            Write-Host "Get-MaybeThrow... catch '$_'"
+            Write-Host "Get-MaybeThrow... catch '$_'" -InformationAction 'Continue'
             Write-Error -ErrorRecord $_ -EA $callerEA
         }
     }
